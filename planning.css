@@ -340,8 +340,8 @@ body {
     color: #333;
 }
 
-/* ===== TOGGLE BUTTON WHEN COLLAPSED ===== */
-.toggle-btn-fixed {
+/* ===== BOUTON POUR MONTRER LA SIDEBAR ===== */
+.show-sidebar-btn {
     position: fixed;
     left: 10px;
     top: 10px;
@@ -353,8 +353,15 @@ body {
     cursor: pointer;
     z-index: 100;
     display: none;
+    font-size: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    transition: opacity 0.2s;
 }
 
-.sidebar.collapsed ~ .toggle-btn-fixed {
+.show-sidebar-btn:hover {
+    opacity: 0.9;
+}
+
+.show-sidebar-btn.visible {
     display: block;
 }

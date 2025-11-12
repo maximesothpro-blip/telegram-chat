@@ -11,6 +11,7 @@ const recipesList = document.getElementById('recipesList');
 const calendar = document.getElementById('calendar');
 const sidebar = document.getElementById('sidebar');
 const toggleSidebar = document.getElementById('toggleSidebar');
+const showSidebar = document.getElementById('showSidebar');
 const refreshRecipes = document.getElementById('refreshRecipes');
 const recipePopup = document.getElementById('recipePopup');
 const closePopup = document.getElementById('closePopup');
@@ -272,6 +273,20 @@ function addChatMessage(text, sender) {
 toggleSidebar.addEventListener('click', () => {
     sidebar.classList.toggle('collapsed');
     toggleSidebar.textContent = sidebar.classList.contains('collapsed') ? '▶' : '◀';
+
+    // Afficher/cacher le bouton fixe
+    if (sidebar.classList.contains('collapsed')) {
+        showSidebar.classList.add('visible');
+    } else {
+        showSidebar.classList.remove('visible');
+    }
+});
+
+// Bouton pour rouvrir la sidebar
+showSidebar.addEventListener('click', () => {
+    sidebar.classList.remove('collapsed');
+    toggleSidebar.textContent = '◀';
+    showSidebar.classList.remove('visible');
 });
 
 // ===== REFRESH RECIPES =====
