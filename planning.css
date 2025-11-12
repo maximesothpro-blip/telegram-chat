@@ -18,16 +18,19 @@ body {
 /* ===== SIDEBAR RECETTES ===== */
 .sidebar {
     width: 250px;
+    min-width: 250px;
     background: white;
     border-right: 2px solid #ddd;
     display: flex;
     flex-direction: column;
-    transition: width 0.3s, margin-left 0.3s;
+    transition: width 0.3s, min-width 0.3s;
+    overflow: hidden;
 }
 
 .sidebar.collapsed {
     width: 0;
-    margin-left: -250px;
+    min-width: 0;
+    border-right: none;
 }
 
 .sidebar-header {
@@ -43,13 +46,27 @@ body {
     font-size: 18px;
 }
 
-.toggle-btn {
+.header-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.toggle-btn, .refresh-btn {
     background: none;
     border: none;
     color: white;
     font-size: 20px;
     cursor: pointer;
     padding: 5px;
+    transition: opacity 0.2s;
+}
+
+.toggle-btn:hover, .refresh-btn:hover {
+    opacity: 0.7;
+}
+
+.refresh-btn {
+    font-size: 22px;
 }
 
 .recipes-list {

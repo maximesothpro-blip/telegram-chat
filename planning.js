@@ -11,6 +11,7 @@ const recipesList = document.getElementById('recipesList');
 const calendar = document.getElementById('calendar');
 const sidebar = document.getElementById('sidebar');
 const toggleSidebar = document.getElementById('toggleSidebar');
+const refreshRecipes = document.getElementById('refreshRecipes');
 const recipePopup = document.getElementById('recipePopup');
 const closePopup = document.getElementById('closePopup');
 const chatForm = document.getElementById('chatForm');
@@ -271,6 +272,17 @@ function addChatMessage(text, sender) {
 toggleSidebar.addEventListener('click', () => {
     sidebar.classList.toggle('collapsed');
     toggleSidebar.textContent = sidebar.classList.contains('collapsed') ? '▶' : '◀';
+});
+
+// ===== REFRESH RECIPES =====
+refreshRecipes.addEventListener('click', async () => {
+    refreshRecipes.style.opacity = '0.5';
+    refreshRecipes.disabled = true;
+
+    await loadRecipes();
+
+    refreshRecipes.style.opacity = '1';
+    refreshRecipes.disabled = false;
 });
 
 // ===== UTILS =====
