@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat avec mon Bot Telegram</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>Chat Bot Telegram</h1>
+            <div class="status" id="status">
+                <span class="status-indicator"></span>
+                <span class="status-text">En ligne</span>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot-message">
+                <div class="message-content">
+                    <p>Bonjour ! Je suis votre bot Telegram. Comment puis-je vous aider ?</p>
+                </div>
+                <div class="message-time">Maintenant</div>
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <div class="typing-indicator" id="typingIndicator">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <form class="chat-input-form" id="chatForm">
+                <input
+                    type="text"
+                    class="chat-input"
+                    id="messageInput"
+                    placeholder="Écrivez votre message..."
+                    autocomplete="off"
+                    required
+                />
+                <button type="submit" class="send-button" id="sendButton">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
