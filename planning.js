@@ -1081,9 +1081,19 @@ function categorizeIngredient(name) {
         return 'Fruits & Légumes';
     }
 
+    // Poissons (check first - more specific)
+    if (nameLower.includes('poisson') || nameLower.includes('saumon') || nameLower.includes('thon') ||
+        nameLower.includes('truite') || nameLower.includes('cabillaud') || nameLower.includes('colin') ||
+        nameLower.includes('dorade') || nameLower.includes('crevette') || nameLower.includes('fruits de mer')) {
+        return 'Poissons';
+    }
+
+    // Viandes
     if (nameLower.includes('poulet') || nameLower.includes('boeuf') || nameLower.includes('porc') ||
-        nameLower.includes('viande') || nameLower.includes('poisson') || nameLower.includes('saumon')) {
-        return 'Viandes & Poissons';
+        nameLower.includes('viande') || nameLower.includes('bœuf') || nameLower.includes('agneau') ||
+        nameLower.includes('veau') || nameLower.includes('dinde') || nameLower.includes('canard') ||
+        nameLower.includes('steak') || nameLower.includes('escalope')) {
+        return 'Viandes';
     }
 
     if (nameLower.includes('lait') || nameLower.includes('fromage') || nameLower.includes('yaourt') ||
