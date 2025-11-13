@@ -627,6 +627,10 @@ generateListBtn.addEventListener('click', () => {
 function generateShoppingList() {
     shoppingList = [];
 
+    console.log('=== DEBUG GÉNÉRATION LISTE ===');
+    console.log('Planning:', planning);
+    console.log('Recettes disponibles:', recipes);
+
     if (planning.length === 0) {
         shoppingContent.innerHTML = '<p class="empty-shopping">Aucun repas planifié pour cette semaine.</p>';
         return;
@@ -637,35 +641,47 @@ function generateShoppingList() {
 
     // Parcourir tous les repas planifiés de la semaine
     planning.forEach(item => {
+        console.log('Item planning:', item);
+
         if (item.recipe && item.recipe.length > 0) {
             const recipeId = item.recipe[0];
             const recipe = recipes.find(r => r.id === recipeId);
 
-            if (recipe && recipe.ingredients) {
-                console.log(`Parsing ingrédients pour: ${recipe.name}`);
+            console.log('Recette trouvée:', recipe);
+
+            if (recipe) {
+                console.log(`Type de ingredients:`, typeof recipe.ingredients);
                 console.log(`Ingrédients bruts:`, recipe.ingredients);
 
-                // Parser les ingrédients (format texte, une ligne par ingrédient)
-                const ingredientLines = recipe.ingredients.split('\n').filter(line => line.trim());
+                if (recipe.ingredients) {
+                    // Parser les ingrédients (format texte, une ligne par ingrédient)
+                    const ingredientLines = recipe.ingredients.split('\n').filter(line => line.trim());
+                    console.log(`Lignes d'ingrédients:`, ingredientLines);
 
-                ingredientLines.forEach(line => {
-                    const parsed = parseIngredient(line);
-                    if (parsed) {
-                        const key = parsed.name.toLowerCase();
+                    ingredientLines.forEach(line => {
+                        console.log(`Parsing ligne: "${line}"`);
+                        const parsed = parseIngredient(line);
+                        console.log(`Résultat parsing:`, parsed);
 
-                        if (ingredientsMap[key]) {
-                            // Agréger les quantités
-                            ingredientsMap[key].quantity += parsed.quantity;
-                        } else {
-                            ingredientsMap[key] = {
-                                name: parsed.name,
-                                quantity: parsed.quantity,
-                                unit: parsed.unit,
-                                category: parsed.category || 'Autre'
-                            };
+                        if (parsed) {
+                            const key = parsed.name.toLowerCase();
+
+                            if (ingredientsMap[key]) {
+                                // Agréger les quantités
+                                ingredientsMap[key].quantity += parsed.quantity;
+                            } else {
+                                ingredientsMap[key] = {
+                                    name: parsed.name,
+                                    quantity: parsed.quantity,
+                                    unit: parsed.unit,
+                                    category: parsed.category || 'Autre'
+                                };
+                            }
                         }
-                    }
-                });
+                    });
+                } else {
+                    console.warn(`Pas d'ingrédients pour la recette: ${recipe.name}`);
+                }
             }
         }
     });
