@@ -118,9 +118,45 @@ body {
     overflow-y: auto;
 }
 
-.planning h1 {
+.planning-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 20px;
+}
+
+.planning h1 {
+    margin: 0;
     color: #333;
+}
+
+.week-navigation {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.week-nav-btn {
+    padding: 8px 16px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.week-nav-btn:hover {
+    background: #5568d3;
+}
+
+.week-display {
+    font-weight: bold;
+    font-size: 16px;
+    color: #667eea;
+    min-width: 150px;
+    text-align: center;
 }
 
 .calendar-grid {

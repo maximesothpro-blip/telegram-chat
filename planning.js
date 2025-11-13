@@ -19,6 +19,9 @@ const closePopup = document.getElementById('closePopup');
 const chatForm = document.getElementById('chatForm');
 const messageInput = document.getElementById('messageInput');
 const chatMessages = document.getElementById('chatMessages');
+const prevWeek = document.getElementById('prevWeek');
+const nextWeek = document.getElementById('nextWeek');
+const weekDisplay = document.getElementById('weekDisplay');
 
 // Jours de la semaine
 const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
@@ -26,11 +29,17 @@ const MEALS = ['Déjeuner', 'Dîner'];
 
 // ===== INITIALISATION =====
 async function init() {
+    updateWeekDisplay();
     await loadRecipes();
     await loadPlanning();
     createCalendar();
     displayPlanning();
     setupEventListeners();
+}
+
+// ===== METTRE À JOUR L'AFFICHAGE DE LA SEMAINE =====
+function updateWeekDisplay() {
+    weekDisplay.textContent = `Semaine ${currentWeek} - ${currentYear}`;
 }
 
 // ===== CHARGER LES RECETTES =====
@@ -348,6 +357,33 @@ refreshRecipes.addEventListener('click', async () => {
     refreshRecipes.style.opacity = '1';
     refreshRecipes.disabled = false;
 });
+
+// ===== NAVIGATION DE SEMAINE =====
+prevWeek.addEventListener('click', async () => {
+    currentWeek--;
+    if (currentWeek < 1) {
+        currentWeek = 52;
+        currentYear--;
+    }
+    await reloadWeek();
+});
+
+nextWeek.addEventListener('click', async () => {
+    currentWeek++;
+    if (currentWeek > 52) {
+        currentWeek = 1;
+        currentYear++;
+    }
+    await reloadWeek();
+});
+
+async function reloadWeek() {
+    updateWeekDisplay();
+    planning = [];
+    await loadPlanning();
+    createCalendar();
+    displayPlanning();
+}
 
 // ===== UTILS =====
 function getCurrentWeek() {
