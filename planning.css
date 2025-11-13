@@ -637,3 +637,15 @@ body {
 .show-sidebar-btn.visible {
     display: block;
 }
+
+/* ===== VERSION INFO ===== */
+.version-info {
+    position: fixed;
+    bottom: 5px;
+    right: 10px;
+    font-size: 10px;
+    color: #999;
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 1;
+}
