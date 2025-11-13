@@ -22,6 +22,7 @@ const chatMessages = document.getElementById('chatMessages');
 const prevWeek = document.getElementById('prevWeek');
 const nextWeek = document.getElementById('nextWeek');
 const weekDisplay = document.getElementById('weekDisplay');
+const searchRecipes = document.getElementById('searchRecipes');
 
 // Jours de la semaine
 const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
@@ -434,6 +435,23 @@ async function reloadWeek() {
     createCalendar();
     displayPlanning();
 }
+
+// ===== RECHERCHE DE RECETTES =====
+searchRecipes.addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase().trim();
+    const recipeItems = document.querySelectorAll('.recipe-item');
+
+    recipeItems.forEach(item => {
+        const recipeName = item.dataset.recipeName.toLowerCase();
+        const recipeTags = item.querySelector('.recipe-tags').textContent.toLowerCase();
+
+        if (recipeName.includes(searchTerm) || recipeTags.includes(searchTerm)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+});
 
 // ===== UTILS =====
 function getCurrentWeek() {
