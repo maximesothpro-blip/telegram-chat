@@ -654,31 +654,59 @@ function generateShoppingList() {
                 console.log(`Ingrédients bruts:`, recipe.ingredients);
 
                 if (recipe.ingredients) {
-                    // Parser les ingrédients (format texte, une ligne par ingrédient)
-                    const ingredientLines = recipe.ingredients.split('\n').filter(line => line.trim());
-                    console.log(`Lignes d'ingrédients:`, ingredientLines);
+                    try {
+                        // Parser le JSON des ingrédients
+                        let ingredientsList;
 
-                    ingredientLines.forEach(line => {
-                        console.log(`Parsing ligne: "${line}"`);
-                        const parsed = parseIngredient(line);
-                        console.log(`Résultat parsing:`, parsed);
-
-                        if (parsed) {
-                            const key = parsed.name.toLowerCase();
-
-                            if (ingredientsMap[key]) {
-                                // Agréger les quantités
-                                ingredientsMap[key].quantity += parsed.quantity;
-                            } else {
-                                ingredientsMap[key] = {
-                                    name: parsed.name,
-                                    quantity: parsed.quantity,
-                                    unit: parsed.unit,
-                                    category: parsed.category || 'Autre'
-                                };
-                            }
+                        if (typeof recipe.ingredients === 'string') {
+                            ingredientsList = JSON.parse(recipe.ingredients);
+                        } else {
+                            ingredientsList = recipe.ingredients;
                         }
-                    });
+
+                        console.log(`Ingrédients parsés:`, ingredientsList);
+
+                        if (Array.isArray(ingredientsList)) {
+                            ingredientsList.forEach(item => {
+                                const name = item.ingredient;
+                                const quantity = parseFloat(item.quantite) || 0;
+                                const unit = item.unite || 'unité';
+
+                                console.log(`Traitement: ${quantity} ${unit} ${name}`);
+
+                                const key = name.toLowerCase();
+
+                                if (ingredientsMap[key]) {
+                                    // Agréger les quantités (seulement si même unité)
+                                    if (ingredientsMap[key].unit === unit) {
+                                        ingredientsMap[key].quantity += quantity;
+                                    } else {
+                                        // Créer une entrée séparée avec l'unité différente
+                                        const newKey = `${key}_${unit}`;
+                                        if (ingredientsMap[newKey]) {
+                                            ingredientsMap[newKey].quantity += quantity;
+                                        } else {
+                                            ingredientsMap[newKey] = {
+                                                name: name,
+                                                quantity: quantity,
+                                                unit: unit,
+                                                category: categorizeIngredient(name)
+                                            };
+                                        }
+                                    }
+                                } else {
+                                    ingredientsMap[key] = {
+                                        name: name,
+                                        quantity: quantity,
+                                        unit: unit,
+                                        category: categorizeIngredient(name)
+                                    };
+                                }
+                            });
+                        }
+                    } catch (error) {
+                        console.error(`Erreur parsing JSON pour ${recipe.name}:`, error);
+                    }
                 } else {
                     console.warn(`Pas d'ingrédients pour la recette: ${recipe.name}`);
                 }
