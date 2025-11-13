@@ -989,6 +989,12 @@ function generateShoppingList() {
 
                             if (Array.isArray(ingredientsList)) {
                                 ingredientsList.forEach(item => {
+                                    // Skip invalid items
+                                    if (!item.ingredient) {
+                                        console.warn('Item sans nom d\'ingrédient:', item);
+                                        return;
+                                    }
+
                                     const name = item.ingredient;
                                     const quantity = parseFloat(item.quantite) || 0;
                                     const unit = item.unite || 'unité';
