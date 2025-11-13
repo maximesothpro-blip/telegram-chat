@@ -96,9 +96,17 @@ function displayPlanning() {
         const mealContent = slot.querySelector('.meal-content');
         mealContent.innerHTML = `
             <div class="planned-recipe" data-record-id="${item.id}" data-recipe-id="${item.recipe[0] || ''}">
-                ${recipeName}
+                <span class="recipe-name-text">${recipeName}</span>
+                <button class="delete-recipe-btn" data-record-id="${item.id}">×</button>
             </div>
         `;
+
+        // Ajouter l'event listener pour la suppression
+        const deleteBtn = mealContent.querySelector('.delete-recipe-btn');
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteRecipeFromPlanning(item.id, slot);
+        });
     });
 }
 
@@ -209,7 +217,7 @@ async function handleDrop(e) {
     const day = slot.dataset.day;
     const meal = slot.dataset.meal;
 
-    // Afficher immédiatement dans l'UI
+    // Afficher immédiatement dans l'UI (sans bouton delete pour l'instant, on attend la réponse)
     const mealContent = slot.querySelector('.meal-content');
     mealContent.innerHTML = `<div class="planned-recipe">${recipeName}</div>`;
 
@@ -234,12 +242,54 @@ async function handleDrop(e) {
 
         const data = await response.json();
 
-        if (!data.success) {
+        if (data.success && data.record) {
+            // Mettre à jour avec le bouton delete
+            const recordId = data.record.id;
+            mealContent.innerHTML = `
+                <div class="planned-recipe" data-record-id="${recordId}" data-recipe-id="${recipeId}">
+                    <span class="recipe-name-text">${recipeName}</span>
+                    <button class="delete-recipe-btn" data-record-id="${recordId}">×</button>
+                </div>
+            `;
+
+            // Ajouter l'event listener pour la suppression
+            const deleteBtn = mealContent.querySelector('.delete-recipe-btn');
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteRecipeFromPlanning(recordId, slot);
+            });
+        } else {
             console.error('Failed to save to Airtable');
-            // Optionnel: afficher un message d'erreur
         }
     } catch (error) {
         console.error('Error saving to Airtable:', error);
+    }
+}
+
+// ===== SUPPRIMER UNE RECETTE DU PLANNING =====
+async function deleteRecipeFromPlanning(recordId, slot) {
+    if (!confirm('Supprimer cette recette du planning ?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/api/planning/${recordId}`, {
+            method: 'DELETE'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Vider le slot
+            const mealContent = slot.querySelector('.meal-content');
+            mealContent.innerHTML = '<div class="empty-slot">Glissez une recette ici</div>';
+            console.log('Recipe deleted successfully');
+        } else {
+            alert('Erreur lors de la suppression');
+        }
+    } catch (error) {
+        console.error('Error deleting recipe:', error);
+        alert('Erreur lors de la suppression');
     }
 }
 
