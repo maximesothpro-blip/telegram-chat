@@ -835,7 +835,7 @@ function displayEditableShoppingList() {
             const quantityStr = item.quantity % 1 === 0 ? item.quantity : item.quantity.toFixed(1);
             html += `
                 <div class="editable-ingredient" data-index="${item.index}">
-                    <input type="number" class="ingredient-qty" value="${quantityStr}" step="0.1" min="0">
+                    <input type="number" class="ingredient-qty" value="${quantityStr}" step="1" min="0">
                     <select class="ingredient-unit">
                         <option value="g" ${item.unit === 'g' ? 'selected' : ''}>g</option>
                         <option value="kg" ${item.unit === 'kg' ? 'selected' : ''}>kg</option>
