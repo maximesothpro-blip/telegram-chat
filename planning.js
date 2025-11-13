@@ -74,6 +74,75 @@ async function loadPlanning() {
     }
 }
 
+// ===== METTRE À JOUR LE RÉSUMÉ NUTRITIONNEL D'UN JOUR =====
+function updateDaySummary(day) {
+    const daySummary = document.querySelector(`.day-summary[data-day="${day}"]`);
+    if (!daySummary) return;
+
+    // Trouver toutes les recettes de ce jour
+    const daySlots = document.querySelectorAll(`[data-day="${day}"]`);
+    let totalCalories = 0;
+    let totalProteins = 0;
+    let totalCarbs = 0;
+    let totalFats = 0;
+
+    daySlots.forEach(slot => {
+        if (slot.classList.contains('meal-slot')) {
+            const plannedRecipe = slot.querySelector('.planned-recipe');
+            if (plannedRecipe) {
+                const recipeId = plannedRecipe.dataset.recipeId;
+                const recipe = recipes.find(r => r.id === recipeId);
+                if (recipe) {
+                    totalCalories += recipe.calories || 0;
+                    totalProteins += recipe.proteins || 0;
+                    totalCarbs += recipe.carbs || 0;
+                    totalFats += recipe.fats || 0;
+                }
+            }
+        }
+    });
+
+    // Mettre à jour l'affichage
+    daySummary.querySelector('.calories-total').textContent = Math.round(totalCalories);
+    daySummary.querySelector('.protein-total').textContent = Math.round(totalProteins);
+
+    // Stocker les totaux pour le popup
+    daySummary.dataset.calories = totalCalories;
+    daySummary.dataset.proteins = totalProteins;
+    daySummary.dataset.carbs = totalCarbs;
+    daySummary.dataset.fats = totalFats;
+}
+
+// ===== AFFICHER LE POPUP DE RÉSUMÉ DU JOUR =====
+function showDaySummaryPopup(day) {
+    const daySummary = document.querySelector(`.day-summary[data-day="${day}"]`);
+    if (!daySummary) return;
+
+    const calories = Math.round(parseFloat(daySummary.dataset.calories) || 0);
+    const proteins = Math.round(parseFloat(daySummary.dataset.proteins) || 0);
+    const carbs = Math.round(parseFloat(daySummary.dataset.carbs) || 0);
+    const fats = Math.round(parseFloat(daySummary.dataset.fats) || 0);
+
+    const popupTitle = document.getElementById('popupTitle');
+    const popupBody = document.getElementById('popupBody');
+
+    popupTitle.textContent = `Résumé nutritionnel - ${day}`;
+
+    popupBody.innerHTML = `
+        <div class="popup-section">
+            <strong>Totaux de la journée :</strong>
+            <ul>
+                <li>🔥 Calories : ${calories} kcal</li>
+                <li>💪 Protéines : ${proteins}g</li>
+                <li>🍞 Glucides : ${carbs}g</li>
+                <li>🥑 Lipides : ${fats}g</li>
+            </ul>
+        </div>
+    `;
+
+    recipePopup.classList.add('active');
+}
+
 // ===== AFFICHER LE PLANNING =====
 function displayPlanning() {
     planning.forEach(item => {
@@ -108,7 +177,18 @@ function displayPlanning() {
             e.stopPropagation();
             deleteRecipeFromPlanning(item.id, slot);
         });
+
+        // Ajouter l'event listener pour afficher le popup
+        const plannedRecipeDiv = mealContent.querySelector('.planned-recipe');
+        plannedRecipeDiv.addEventListener('click', () => {
+            if (recipeData) {
+                showRecipePopup(recipeData);
+            }
+        });
     });
+
+    // Mettre à jour tous les résumés nutritionnels
+    DAYS.forEach(day => updateDaySummary(day));
 }
 
 // ===== AFFICHER LES RECETTES =====
@@ -171,6 +251,19 @@ function createCalendar() {
 
             dayColumn.appendChild(mealSlot);
         });
+
+        // Ajouter le résumé nutritionnel du jour
+        const daySummary = document.createElement('div');
+        daySummary.className = 'day-summary';
+        daySummary.dataset.day = day;
+        daySummary.innerHTML = `
+            <div class="summary-content">
+                <div class="summary-line">🔥 <span class="calories-total">0</span> kcal</div>
+                <div class="summary-line">💪 <span class="protein-total">0</span>g prot</div>
+            </div>
+        `;
+        daySummary.addEventListener('click', () => showDaySummaryPopup(day));
+        dayColumn.appendChild(daySummary);
 
         calendar.appendChild(dayColumn);
     });
@@ -259,6 +352,18 @@ async function handleDrop(e) {
                 e.stopPropagation();
                 deleteRecipeFromPlanning(recordId, slot);
             });
+
+            // Ajouter l'event listener pour afficher le popup
+            const plannedRecipeDiv = mealContent.querySelector('.planned-recipe');
+            plannedRecipeDiv.addEventListener('click', () => {
+                const recipe = recipes.find(r => r.id === recipeId);
+                if (recipe) {
+                    showRecipePopup(recipe);
+                }
+            });
+
+            // Mettre à jour le résumé nutritionnel du jour
+            updateDaySummary(day);
         } else {
             console.error('Failed to save to Airtable');
         }
@@ -284,6 +389,11 @@ async function deleteRecipeFromPlanning(recordId, slot) {
             // Vider le slot
             const mealContent = slot.querySelector('.meal-content');
             mealContent.innerHTML = '<div class="empty-slot">Glissez une recette ici</div>';
+
+            // Mettre à jour le résumé nutritionnel du jour
+            const day = slot.dataset.day;
+            updateDaySummary(day);
+
             console.log('Recipe deleted successfully');
         } else {
             alert('Erreur lors de la suppression');

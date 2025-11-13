@@ -272,6 +272,31 @@ body {
     font-style: italic;
 }
 
+/* ===== RÉSUMÉ NUTRITIONNEL DU JOUR ===== */
+.day-summary {
+    padding: 10px;
+    background: #f0f4ff;
+    border-top: 2px solid #667eea;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.day-summary:hover {
+    background: #e0e7ff;
+}
+
+.summary-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.summary-line {
+    font-size: 12px;
+    color: #333;
+    font-weight: 500;
+}
+
 /* ===== CHAT SIDEBAR ===== */
 .chat-sidebar {
     width: 300px;
