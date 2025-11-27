@@ -695,19 +695,26 @@ async function saveShoppingListToAirtable(ingredients, repasInclus, week, year) 
 }
 
 // Update shopping list in Airtable
-async function updateShoppingListInAirtable(listId, ingredients, repasInclus) {
+async function updateShoppingListInAirtable(listId, ingredients, repasInclus, name = null) {
     try {
         setSaveStatus('saving');
+
+        const body = {
+            ingredients: ingredients,
+            repasInclus: repasInclus
+        };
+
+        // v3.3.1: Add name if provided
+        if (name) {
+            body.nom = name;
+        }
 
         const response = await fetch(`${API_URL}/api/shopping-list/${listId}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                ingredients: ingredients,
-                repasInclus: repasInclus
-            })
+            body: JSON.stringify(body)
         });
 
         if (!response.ok) {
@@ -1600,8 +1607,14 @@ async function applySettingsAndSave() {
             }
         });
 
-        // Save to Airtable
-        await updateShoppingListInAirtable(currentShoppingListId, modifiedIngredients, mealInclusions);
+        // v3.3.1: Update list name in Airtable if modified
+        let updatedName = `Liste semaine ${currentWeek} - ${currentYear}`;
+        if (isListModified) {
+            updatedName += ' - Modifié';
+        }
+
+        // Save to Airtable with updated name
+        await updateShoppingListInAirtable(currentShoppingListId, modifiedIngredients, mealInclusions, updatedName);
 
         // Refresh main display
         await displayShoppingListFromAirtable();
@@ -1657,8 +1670,11 @@ async function resetShoppingListToDefault() {
         // Merge ingredients
         const mergedIngredients = mergeIngredients([], allIngredients);
 
-        // Save to Airtable
-        await updateShoppingListInAirtable(currentShoppingListId, mergedIngredients, mealInclusions);
+        // v3.3.1: Restore original name (without "- Modifié")
+        const originalName = `Liste semaine ${currentWeek} - ${currentYear}`;
+
+        // Save to Airtable with original name
+        await updateShoppingListInAirtable(currentShoppingListId, mergedIngredients, mealInclusions, originalName);
 
         // Reset modified flag
         isListModified = false;
