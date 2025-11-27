@@ -419,6 +419,9 @@ async function handleDrop(e) {
 
             // Mettre à jour le résumé nutritionnel du jour
             updateDaySummary(day);
+
+            // v3.1: Auto-update shopping list
+            await addMealToShoppingList(recipeId);
         } else {
             console.error('Failed to save to Airtable');
         }
@@ -1017,6 +1020,58 @@ function mergeIngredients(existing, newOnes) {
     });
 
     return Object.values(map);
+}
+
+// Add meal ingredients to shopping list (auto-update on drop)
+async function addMealToShoppingList(recipeId) {
+    try {
+        console.log('Adding meal to shopping list:', recipeId);
+
+        // 1. Find the recipe
+        const recipe = recipes.find(r => r.id === recipeId);
+        if (!recipe) {
+            console.error('Recipe not found:', recipeId);
+            return;
+        }
+
+        // 2. Parse recipe ingredients
+        const newIngredients = parseRecipeIngredients(recipe);
+        console.log('Parsed ingredients:', newIngredients);
+
+        if (newIngredients.length === 0) {
+            console.warn('No ingredients found for recipe:', recipe.name);
+            return;
+        }
+
+        // 3. Fetch current shopping list from Airtable
+        if (!currentShoppingListId) {
+            console.error('No current shopping list ID');
+            return;
+        }
+
+        const response = await fetch(`${API_URL}/api/shopping-list/${currentShoppingListId}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const existingIngredients = JSON.parse(data.shoppingList.ingredientsJSON || '[]');
+
+        // 4. Merge ingredients
+        const mergedIngredients = mergeIngredients(existingIngredients, newIngredients);
+        console.log('Merged ingredients:', mergedIngredients.length, 'items');
+
+        // 5. Update in Airtable
+        await updateShoppingListInAirtable(currentShoppingListId, mergedIngredients, {});
+
+        // 6. Refresh display
+        await displayShoppingListFromAirtable();
+
+        console.log('✅ Shopping list updated successfully');
+
+    } catch (error) {
+        console.error('Error adding meal to shopping list:', error);
+    }
 }
 
 // ===== GESTION DES ONGLETS =====
