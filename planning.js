@@ -1512,34 +1512,48 @@ function attachEditableListeners() {
     });
 }
 
-// Update editable list preview based on meal inclusions (v3.2)
+// Update editable list preview based on meal inclusions (v3.3 - cross-week support)
 async function updateEditableListPreview() {
     try {
-        const weekKey = `${currentWeek}-${currentYear}`;
-        const weekPlanning = allWeeksPlanning[weekKey] || planning;
-
-        if (!weekPlanning || weekPlanning.length === 0) {
-            settingsListContent.innerHTML = '<p class="empty-shopping">Aucun repas planifié.</p>';
-            return;
-        }
-
         let allIngredients = [];
 
-        // Loop through planning and only include selected meals
-        weekPlanning.forEach((item, index) => {
-            const globalKey = `${currentWeek}-${currentYear}-${index}`;
+        // Loop through ALL meal inclusions (any week)
+        for (const globalKey in mealInclusions) {
             const isIncluded = mealInclusions[globalKey];
 
-            if (isIncluded && item.recipe && item.recipe.length > 0) {
-                const recipeId = item.recipe[0];
-                const recipe = recipes.find(r => r.id === recipeId);
+            if (isIncluded) {
+                // Parse the global key: "week-year-index"
+                const parts = globalKey.split('-');
+                const week = parseInt(parts[0]);
+                const year = parseInt(parts[1]);
+                const index = parseInt(parts[2]);
 
-                if (recipe) {
-                    const ingredients = parseRecipeIngredients(recipe);
-                    allIngredients = allIngredients.concat(ingredients);
+                // Load planning for this week if needed
+                const weekKey = `${week}-${year}`;
+                let weekPlanning = allWeeksPlanning[weekKey];
+
+                if (!weekPlanning) {
+                    // Load this week's planning
+                    weekPlanning = await loadPlanningForWeek(week, year);
+                }
+
+                // Get the meal item
+                if (weekPlanning && weekPlanning[index]) {
+                    const item = weekPlanning[index];
+
+                    if (item.recipe && item.recipe.length > 0) {
+                        const recipeId = item.recipe[0];
+                        const recipe = recipes.find(r => r.id === recipeId);
+
+                        if (recipe) {
+                            const ingredients = parseRecipeIngredients(recipe);
+                            allIngredients = allIngredients.concat(ingredients);
+                            console.log(`Added ingredients from ${recipe.name} (Week ${week})`);
+                        }
+                    }
                 }
             }
-        });
+        }
 
         // Merge ingredients
         const mergedIngredients = mergeIngredients([], allIngredients);
@@ -1549,6 +1563,7 @@ async function updateEditableListPreview() {
             settingsListContent.innerHTML = '<p class="empty-shopping">Aucun repas sélectionné.</p>';
         } else {
             displayEditableIngredients(mergedIngredients);
+            console.log(`Total: ${mergedIngredients.length} ingredients from all weeks`);
         }
 
     } catch (error) {
