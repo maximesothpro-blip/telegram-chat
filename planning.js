@@ -16,6 +16,7 @@ let mealInclusions = {}; // Track which meals are included (green) or excluded (
 let currentShoppingListId = null; // Airtable record ID of current list
 let autoSaveTimer = null; // Timer for auto-save debounce
 let isSaving = false; // Track save status
+let isListModified = false; // Track if shopping list has been modified (v3.3)
 
 // Éléments DOM
 const recipesList = document.getElementById('recipesList');
@@ -48,6 +49,7 @@ const settingsNextWeek = document.getElementById('settingsNextWeek');
 const settingsSelectAll = document.getElementById('settingsSelectAll');
 const settingsSelectNone = document.getElementById('settingsSelectNone');
 const applySettings = document.getElementById('applySettings');
+const resetSettings = document.getElementById('resetSettings');
 
 // Jours de la semaine
 const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
@@ -1235,8 +1237,9 @@ async function loadMealInclusionsFromAirtable() {
 
 // Display planning in settings popup
 async function displaySettingsCalendar() {
-    // Update week display
-    settingsWeekDisplay.textContent = `Semaine ${settingsWeek} - ${settingsYear}`;
+    // Update week display with modification indicator (v3.3)
+    const modifiedText = isListModified ? ' - Modifié' : '';
+    settingsWeekDisplay.textContent = `Semaine ${settingsWeek} - ${settingsYear}${modifiedText}`;
 
     // Load planning for this week if not loaded
     const weekPlanning = await loadPlanningForWeek(settingsWeek, settingsYear);
@@ -1285,33 +1288,27 @@ async function displaySettingsCalendar() {
                 const globalKey = `${settingsWeek}-${settingsYear}-${planningIndex}`;
                 const isIncluded = mealInclusions[globalKey];
 
-                let boxClass = 'settings-meal-box';
-                if (!isCurrentWeek) {
-                    // Yellow for other weeks, with green border if included
-                    boxClass += isIncluded ? ' other-week-included' : ' other-week-excluded';
-                } else {
-                    boxClass += isIncluded ? ' included' : ' excluded';
-                }
+                // v3.3: Simplified color system - just green/red
+                const boxClass = `settings-meal-box ${isIncluded ? 'included' : 'excluded'}`;
 
                 const mealBox = document.createElement('div');
                 mealBox.className = boxClass;
                 mealBox.textContent = recipeName;
                 mealBox.dataset.globalKey = globalKey;
-                mealBox.dataset.isCurrentWeek = isCurrentWeek;
+                mealBox.dataset.settingsWeek = settingsWeek;
+                mealBox.dataset.settingsYear = settingsYear;
 
                 // Toggle inclusion/exclusion
                 mealBox.addEventListener('click', async () => {
                     mealInclusions[globalKey] = !mealInclusions[globalKey];
                     const nowIncluded = mealInclusions[globalKey];
-                    const isCurrent = mealBox.dataset.isCurrentWeek === 'true';
 
-                    // Update color
-                    if (!isCurrent) {
-                        // Yellow for other weeks, border changes based on inclusion
-                        mealBox.className = `settings-meal-box ${nowIncluded ? 'other-week-included' : 'other-week-excluded'}`;
-                    } else {
-                        mealBox.className = `settings-meal-box ${nowIncluded ? 'included' : 'excluded'}`;
-                    }
+                    // v3.3: Simplified - just toggle green/red
+                    mealBox.className = `settings-meal-box ${nowIncluded ? 'included' : 'excluded'}`;
+
+                    // Mark list as modified (v3.3)
+                    isListModified = true;
+                    updateSettingsWeekDisplay();
 
                     // v3.2: Update editable list in real-time
                     await updateEditableListPreview();
@@ -1559,6 +1556,12 @@ async function updateEditableListPreview() {
     }
 }
 
+// Update settings week display with modification indicator (v3.3)
+function updateSettingsWeekDisplay() {
+    const modifiedText = isListModified ? ' - Modifié' : '';
+    settingsWeekDisplay.textContent = `Semaine ${settingsWeek} - ${settingsYear}${modifiedText}`;
+}
+
 // Apply settings and save to Airtable (v3.2)
 async function applySettingsAndSave() {
     try {
@@ -1588,6 +1591,10 @@ async function applySettingsAndSave() {
         // Refresh main display
         await displayShoppingListFromAirtable();
 
+        // Reset modified flag (v3.3)
+        isListModified = false;
+        updateSettingsWeekDisplay();
+
         console.log('✅ Settings saved to Airtable');
 
     } catch (error) {
@@ -1595,6 +1602,67 @@ async function applySettingsAndSave() {
         alert('Erreur lors de la sauvegarde. Veuillez réessayer.');
     }
 }
+
+// Reset shopping list to default (v3.3)
+async function resetShoppingListToDefault() {
+    try {
+        if (!confirm('Voulez-vous réinitialiser la liste de courses ?\n\nCela va :\n- Inclure tous les repas de la semaine actuelle\n- Exclure tous les repas des autres semaines\n- Restaurer les quantités par défaut des recettes')) {
+            return;
+        }
+
+        console.log('Resetting shopping list to default...');
+
+        // Reset all meal inclusions
+        const weekKey = `${currentWeek}-${currentYear}`;
+        const currentWeekPlanning = allWeeksPlanning[weekKey] || planning;
+
+        // Clear all inclusions
+        mealInclusions = {};
+
+        // Set current week meals as included
+        currentWeekPlanning.forEach((item, index) => {
+            const globalKey = `${currentWeek}-${currentYear}-${index}`;
+            mealInclusions[globalKey] = true; // Include current week meals
+        });
+
+        // Regenerate list from current week planning only
+        let allIngredients = [];
+        currentWeekPlanning.forEach((item, index) => {
+            if (item.recipe && item.recipe.length > 0) {
+                const recipeId = item.recipe[0];
+                const recipe = recipes.find(r => r.id === recipeId);
+
+                if (recipe) {
+                    const ingredients = parseRecipeIngredients(recipe);
+                    allIngredients = allIngredients.concat(ingredients);
+                }
+            }
+        });
+
+        // Merge ingredients
+        const mergedIngredients = mergeIngredients([], allIngredients);
+
+        // Save to Airtable
+        await updateShoppingListInAirtable(currentShoppingListId, mergedIngredients, mealInclusions);
+
+        // Reset modified flag
+        isListModified = false;
+
+        // Refresh displays
+        await displaySettingsCalendar();
+        await displayEditableShoppingListFromAirtable();
+        await displayShoppingListFromAirtable();
+
+        console.log('✅ Shopping list reset to default');
+
+    } catch (error) {
+        console.error('Error resetting shopping list:', error);
+        alert('Erreur lors de la réinitialisation. Veuillez réessayer.');
+    }
+}
+
+// Reset button event listener (v3.3)
+resetSettings.addEventListener('click', resetShoppingListToDefault);
 
 // Clear shopping list
 clearListBtn.addEventListener('click', async () => {

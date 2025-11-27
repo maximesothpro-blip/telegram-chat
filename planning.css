@@ -1027,9 +1027,27 @@ body {
 
 .settings-footer {
     margin-top: 20px;
-    text-align: right;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding-top: 15px;
     border-top: 1px solid #ddd;
+}
+
+.settings-reset-btn {
+    padding: 10px 20px;
+    background: #f59e0b;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.settings-reset-btn:hover {
+    background: #d97706;
 }
 
 .settings-apply-btn {
@@ -1041,6 +1059,7 @@ body {
     cursor: pointer;
     font-size: 14px;
     font-weight: 500;
+    transition: background 0.2s;
 }
 
 .settings-apply-btn:hover {
