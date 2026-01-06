@@ -18,6 +18,9 @@ let autoSaveTimer = null; // Timer for auto-save debounce
 let isSaving = false; // Track save status
 let isListModified = false; // Track if shopping list has been modified (v3.3)
 
+// Servings management (v3.5)
+let defaultServings = parseInt(localStorage.getItem('defaultServings')) || 2; // Default number of servings
+
 // Éléments DOM
 const recipesList = document.getElementById('recipesList');
 const calendar = document.getElementById('calendar');
@@ -223,7 +226,7 @@ function displayPlanning() {
         const mealContent = slot.querySelector('.meal-content');
         mealContent.innerHTML = `
             <div class="planned-recipe" data-record-id="${item.id}" data-recipe-id="${item.recipe[0] || ''}">
-                <span class="recipe-name-text">${recipeName}</span>
+                <span class="recipe-name-text">${recipeName} <span class="servings-indicator">👤 × ${defaultServings}</span></span>
                 <button class="delete-recipe-btn" data-record-id="${item.id}">×</button>
             </div>
         `;
@@ -608,6 +611,46 @@ async function reloadWeek() {
     // v3.1: Reload shopping list for new week
     await initializeShoppingList();
 }
+
+// ===== SERVINGS CONTROL (v3.5) =====
+const servingsInput = document.getElementById('servingsInput');
+const decreaseServings = document.getElementById('decreaseServings');
+const increaseServings = document.getElementById('increaseServings');
+
+// Initialize servings input with saved value
+servingsInput.value = defaultServings;
+
+// Decrease servings
+decreaseServings.addEventListener('click', () => {
+    if (defaultServings > 1) {
+        defaultServings--;
+        servingsInput.value = defaultServings;
+        localStorage.setItem('defaultServings', defaultServings);
+        displayPlanning(); // Refresh to show new servings
+    }
+});
+
+// Increase servings
+increaseServings.addEventListener('click', () => {
+    if (defaultServings < 20) {
+        defaultServings++;
+        servingsInput.value = defaultServings;
+        localStorage.setItem('defaultServings', defaultServings);
+        displayPlanning(); // Refresh to show new servings
+    }
+});
+
+// Manual input change
+servingsInput.addEventListener('change', () => {
+    let value = parseInt(servingsInput.value);
+    if (isNaN(value) || value < 1) value = 1;
+    if (value > 20) value = 20;
+
+    defaultServings = value;
+    servingsInput.value = value;
+    localStorage.setItem('defaultServings', defaultServings);
+    displayPlanning(); // Refresh to show new servings
+});
 
 // ===== RECHERCHE DE RECETTES =====
 searchRecipes.addEventListener('input', (e) => {
@@ -1001,9 +1044,13 @@ function parseRecipeIngredients(recipe) {
                 return;
             }
 
+            // v3.5: Multiply quantities by defaultServings (recipes in Airtable are for 1 person)
+            const baseQuantity = parseFloat(item.quantite) || 0;
+            const adjustedQuantity = baseQuantity * defaultServings;
+
             parsedIngredients.push({
                 name: name,
-                quantity: parseFloat(item.quantite) || 0,
+                quantity: adjustedQuantity,
                 unit: item.unite || 'unité',
                 category: categorizeIngredient(name)
             });

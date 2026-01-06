@@ -37,10 +37,18 @@
         <main class="planning">
             <div class="planning-header">
                 <h1>Planning de la Semaine</h1>
-                <div class="week-navigation">
-                    <button class="week-nav-btn" id="prevWeek">← Précédent</button>
-                    <span class="week-display" id="weekDisplay">Semaine 46 - 2025</span>
-                    <button class="week-nav-btn" id="nextWeek">Suivant →</button>
+                <div class="header-controls">
+                    <div class="week-navigation">
+                        <button class="week-nav-btn" id="prevWeek">← Précédent</button>
+                        <span class="week-display" id="weekDisplay">Semaine 46 - 2025</span>
+                        <button class="week-nav-btn" id="nextWeek">Suivant →</button>
+                    </div>
+                    <div class="servings-control">
+                        <label for="servingsInput">👤 Personnes :</label>
+                        <button class="servings-btn" id="decreaseServings">−</button>
+                        <input type="number" id="servingsInput" min="1" max="20" value="2" />
+                        <button class="servings-btn" id="increaseServings">+</button>
+                    </div>
                 </div>
             </div>
             <div class="calendar-grid" id="calendar">
@@ -168,7 +176,7 @@
     </div>
 
     <!-- Version -->
-    <div class="version-info">v3.4.0</div>
+    <div class="version-info">v3.5.0</div>
 
     <script src="config.js"></script>
     <script src="planning.js"></script>
