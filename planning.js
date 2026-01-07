@@ -437,8 +437,8 @@ async function handleDrop(e) {
             // Mettre à jour le résumé nutritionnel du jour
             updateDaySummary(day);
 
-            // v3.8: Shopping list disabled for rebuild
-            // await addMealToShoppingList(recipeId);
+            // v3.8.1: Regenerate shopping list
+            generateShoppingListSimple();
         } else {
             console.error('Failed to save to Airtable');
         }
@@ -469,8 +469,8 @@ async function deleteRecipeFromPlanning(recordId, slot) {
             const day = slot.dataset.day;
             updateDaySummary(day);
 
-            // v3.8: Shopping list disabled for rebuild
-            // await populateShoppingListFromPlanning();
+            // v3.8.1: Regenerate shopping list
+            generateShoppingListSimple();
 
             console.log('Recipe deleted successfully');
         } else {
@@ -626,6 +626,9 @@ function setupPopupServingsControl(recipe, recordId) {
 
                 // Update planning display to show new servings
                 updateMealServingsDisplay(recordId, newServings);
+
+                // v3.8.1: Regenerate shopping list
+                generateShoppingListSimple();
 
                 console.log(`✅ Servings updated to ${newServings} in Airtable and local cache`);
             } else {
@@ -817,6 +820,8 @@ async function reloadWeek() {
     // v3.8: Shopping list disabled for rebuild
     // initializeMealInclusions();
     // await initializeShoppingList();
+    // v3.8.1: Auto-generate shopping list after week change
+    generateShoppingListSimple();
 }
 
 // ===== SERVINGS CONTROL (v3.5) =====
@@ -1306,6 +1311,81 @@ function mergeIngredients(existing, newOnes) {
     });
 
     return Object.values(map);
+}
+
+// ===== SIMPLE SHOPPING LIST (v3.8.1) =====
+// Generate shopping list from current week planning (no Airtable save, just display)
+function generateShoppingListSimple() {
+    console.log('🛒 Generating shopping list from planning...');
+
+    const shoppingContent = document.getElementById('shoppingContent');
+
+    // Check if we have meals planned
+    if (!planning || planning.length === 0) {
+        shoppingContent.innerHTML = '<p class="empty-shopping">Aucun repas planifié pour cette semaine.</p>';
+        return;
+    }
+
+    let allIngredients = [];
+
+    // Loop through all planning items
+    for (const item of planning) {
+        if (item.recipe && item.recipe.length > 0) {
+            const recipeId = item.recipe[0];
+            const recipe = recipes.find(r => r.id === recipeId);
+
+            if (recipe) {
+                // Get servings from Airtable
+                const servings = item.servings || defaultServings;
+                const ingredients = parseRecipeIngredients(recipe, servings);
+                allIngredients = allIngredients.concat(ingredients);
+                console.log(`  ✓ ${recipe.name} (${servings} pers) → ${ingredients.length} ingrédients`);
+            }
+        }
+    }
+
+    if (allIngredients.length === 0) {
+        shoppingContent.innerHTML = '<p class="empty-shopping">Aucun ingrédient trouvé.</p>';
+        return;
+    }
+
+    // Merge and aggregate ingredients
+    const mergedIngredients = mergeIngredients([], allIngredients);
+    console.log(`  📊 Total: ${mergedIngredients.length} ingrédients uniques`);
+
+    // Group by category
+    const categories = {};
+    mergedIngredients.forEach(ingredient => {
+        const cat = ingredient.category || 'Autres';
+        if (!categories[cat]) {
+            categories[cat] = [];
+        }
+        categories[cat].push(ingredient);
+    });
+
+    // Display by category
+    let html = `<div class="shopping-list-header"><h3>Liste de courses - Semaine ${currentWeek}</h3></div>`;
+
+    Object.keys(categories).sort().forEach(category => {
+        html += `
+            <div class="ingredient-category">
+                <h4>${category}</h4>
+                <ul class="ingredients-list">
+        `;
+
+        categories[category].forEach(ingredient => {
+            const quantity = Math.round(ingredient.quantity * 100) / 100; // 2 decimals
+            html += `<li><strong>${quantity}${ingredient.unit}</strong> ${ingredient.name}</li>`;
+        });
+
+        html += `
+                </ul>
+            </div>
+        `;
+    });
+
+    shoppingContent.innerHTML = html;
+    console.log('✅ Shopping list generated!');
 }
 
 // Populate shopping list from existing planning
