@@ -18,28 +18,8 @@ let autoSaveTimer = null; // Timer for auto-save debounce
 let isSaving = false; // Track save status
 let isListModified = false; // Track if shopping list has been modified (v3.3)
 
-// Servings management (v3.5)
+// Servings management (v3.7 - Moved to Airtable)
 let defaultServings = parseInt(localStorage.getItem('defaultServings')) || 2; // Default number of servings
-
-// Per-meal servings (v3.6) - each planned meal has its own servings count
-// Key = Airtable record ID of planned meal, Value = number of servings
-let mealServings = JSON.parse(localStorage.getItem('mealServings')) || {};
-
-// Helper function to save mealServings to localStorage
-function saveMealServings() {
-    localStorage.setItem('mealServings', JSON.stringify(mealServings));
-}
-
-// Helper function to get servings for a specific meal (fallback to default)
-function getMealServings(recordId) {
-    return mealServings[recordId] || defaultServings;
-}
-
-// Helper function to set servings for a specific meal
-function setMealServings(recordId, servings) {
-    mealServings[recordId] = servings;
-    saveMealServings();
-}
 
 // Éléments DOM
 const recipesList = document.getElementById('recipesList');
@@ -245,8 +225,8 @@ function displayPlanning() {
         // Afficher la recette dans le slot
         const mealContent = slot.querySelector('.meal-content');
 
-        // v3.6: Get meal-specific servings
-        const mealServingsCount = getMealServings(item.id);
+        // v3.7: Get servings from Airtable (item.servings)
+        const mealServingsCount = item.servings || defaultServings;
 
         mealContent.innerHTML = `
             <div class="planned-recipe" data-record-id="${item.id}" data-recipe-id="${item.recipe[0] || ''}">
@@ -266,8 +246,8 @@ function displayPlanning() {
         const plannedRecipeDiv = mealContent.querySelector('.planned-recipe');
         plannedRecipeDiv.addEventListener('click', () => {
             if (recipeData) {
-                // v3.6: Pass recordId to popup to manage meal-specific servings
-                showRecipePopup(recipeData, item.id);
+                // v3.7: Pass item (with servings from Airtable) to popup
+                showRecipePopup(recipeData, item);
             }
         });
     });
@@ -415,7 +395,8 @@ async function handleDrop(e) {
                 meal: meal,
                 recipeId: recipeId,
                 week: currentWeek,
-                year: currentYear
+                year: currentYear,
+                servings: defaultServings // v3.7: Send default servings to Airtable
             })
         });
 
@@ -424,9 +405,6 @@ async function handleDrop(e) {
         if (data.success && data.record) {
             // Mettre à jour avec le bouton delete
             const recordId = data.record.id;
-
-            // v3.6: Initialize servings for this meal with default value
-            setMealServings(recordId, defaultServings);
 
             mealContent.innerHTML = `
                 <div class="planned-recipe" data-record-id="${recordId}" data-recipe-id="${recipeId}">
@@ -447,8 +425,12 @@ async function handleDrop(e) {
             plannedRecipeDiv.addEventListener('click', () => {
                 const recipe = recipes.find(r => r.id === recipeId);
                 if (recipe) {
-                    // v3.6: Pass recordId to show servings control
-                    showRecipePopup(recipe, recordId);
+                    // v3.7: Pass meal item with servings from response
+                    const mealItem = {
+                        id: recordId,
+                        servings: defaultServings // Just dropped, use default
+                    };
+                    showRecipePopup(recipe, mealItem);
                 }
             });
 
@@ -500,13 +482,14 @@ async function deleteRecipeFromPlanning(recordId, slot) {
     }
 }
 
-// ===== POPUP RECETTE (v3.6 - Refonte) =====
-function showRecipePopup(recipe, recordId = null) {
+// ===== POPUP RECETTE (v3.7 - Airtable servings) =====
+function showRecipePopup(recipe, mealItem = null) {
     const popupTitle = document.getElementById('popupTitle');
     const popupBody = document.getElementById('popupBody');
 
-    // Get current servings for this meal (or default if clicked from recipe list)
-    const currentServings = recordId ? getMealServings(recordId) : defaultServings;
+    // v3.7: Get servings from mealItem (Airtable) or use default
+    const currentServings = mealItem ? (mealItem.servings || defaultServings) : defaultServings;
+    const recordId = mealItem ? mealItem.id : null;
 
     popupTitle.textContent = recipe.name;
 
@@ -614,15 +597,37 @@ function setupPopupServingsControl(recipe, recordId) {
 
     if (!decreaseBtn || !increaseBtn || !servingsInput) return;
 
-    const updatePopupServings = (newServings) => {
-        setMealServings(recordId, newServings);
-        servingsInput.value = newServings;
+    const updatePopupServings = async (newServings) => {
+        // v3.7: Save to Airtable instead of localStorage
+        try {
+            const response = await fetch(`${API_URL}/api/planning/${recordId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    servings: newServings
+                })
+            });
 
-        // Update ingredients display
-        updatePopupIngredients(recipe, newServings);
+            const data = await response.json();
 
-        // Update planning display to show new servings
-        updateMealServingsDisplay(recordId, newServings);
+            if (data.success) {
+                servingsInput.value = newServings;
+
+                // Update ingredients display
+                updatePopupIngredients(recipe, newServings);
+
+                // Update planning display to show new servings
+                updateMealServingsDisplay(recordId, newServings);
+
+                console.log(`✅ Servings updated to ${newServings} in Airtable`);
+            } else {
+                console.error('Failed to update servings:', data);
+            }
+        } catch (error) {
+            console.error('Error updating servings:', error);
+        }
     };
 
     decreaseBtn.addEventListener('click', () => {
@@ -1220,7 +1225,7 @@ async function displayShoppingListFromAirtable() {
 }
 
 // Parse recipe ingredients to standard format
-function parseRecipeIngredients(recipe) {
+function parseRecipeIngredients(recipe, servings = null) {
     if (!recipe || !recipe.ingredients) {
         return [];
     }
@@ -1240,6 +1245,9 @@ function parseRecipeIngredients(recipe) {
 
         const parsedIngredients = [];
 
+        // v3.7: Use provided servings, or default if not provided
+        const finalServings = servings !== null ? servings : defaultServings;
+
         ingredientsList.forEach(item => {
             // Support both 'ingredient' and 'nom' fields
             const name = item.ingredient || item.nom;
@@ -1249,9 +1257,9 @@ function parseRecipeIngredients(recipe) {
                 return;
             }
 
-            // v3.5: Multiply quantities by defaultServings (recipes in Airtable are for 1 person)
+            // v3.7: Multiply quantities by meal-specific servings (recipes in Airtable are for 1 person)
             const baseQuantity = parseFloat(item.quantite) || 0;
-            const adjustedQuantity = baseQuantity * defaultServings;
+            const adjustedQuantity = baseQuantity * finalServings;
 
             parsedIngredients.push({
                 name: name,
@@ -1317,9 +1325,11 @@ async function populateShoppingListFromPlanning() {
                 const recipe = recipes.find(r => r.id === recipeId);
 
                 if (recipe) {
-                    const ingredients = parseRecipeIngredients(recipe);
+                    // v3.7: Pass item.servings (from Airtable) to use meal-specific servings
+                    const servings = item.servings || defaultServings;
+                    const ingredients = parseRecipeIngredients(recipe, servings);
                     allIngredients = allIngredients.concat(ingredients);
-                    console.log(`Added ${ingredients.length} ingredients from ${recipe.name}`);
+                    console.log(`Added ${ingredients.length} ingredients from ${recipe.name} (${servings} personnes)`);
                 }
             }
         }
