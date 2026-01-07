@@ -576,13 +576,6 @@ function showRecipePopup(recipe, recordId = null) {
 
             <!-- Right column: Recipe + Servings control -->
             <div class="popup-right-column">
-                <div class="popup-section">
-                    <strong>Recette étape par étape:</strong>
-                    <ol class="recipe-steps">
-                        ${recipeStepsHTML || '<li>Pas d\'étapes disponibles</li>'}
-                    </ol>
-                </div>
-
                 ${recordId ? `
                 <div class="popup-servings-control">
                     <label>👤 Nombre de personnes:</label>
@@ -593,6 +586,13 @@ function showRecipePopup(recipe, recordId = null) {
                     </div>
                 </div>
                 ` : ''}
+
+                <div class="popup-section">
+                    <strong>Recette étape par étape:</strong>
+                    <ol class="recipe-steps">
+                        ${recipeStepsHTML || '<li>Pas d\'étapes disponibles</li>'}
+                    </ol>
+                </div>
             </div>
         </div>
     `;
