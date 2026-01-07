@@ -839,8 +839,6 @@ async function reloadWeek() {
     // v3.8: Shopping list disabled for rebuild
     // initializeMealInclusions();
     // await initializeShoppingList();
-    // v3.8.1: Auto-generate shopping list after week change
-    generateShoppingListSimple();
 }
 
 // ===== SERVINGS CONTROL (v3.5) =====
