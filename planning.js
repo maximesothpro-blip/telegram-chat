@@ -603,6 +603,9 @@ function setupPopupServingsControl(recipe, recordId) {
     const updatePopupServings = async (newServings) => {
         // v3.7: Save to Airtable instead of localStorage
         try {
+            // Get old servings before updating
+            const oldServings = parseInt(servingsInput.value);
+
             const response = await fetch(`${API_URL}/api/planning/${recordId}`, {
                 method: 'PATCH',
                 headers: {
@@ -630,8 +633,8 @@ function setupPopupServingsControl(recipe, recordId) {
                 // Update planning display to show new servings
                 updateMealServingsDisplay(recordId, newServings);
 
-                // v3.8.1: Regenerate shopping list
-                generateShoppingListSimple();
+                // v3.9: Update shopping list (add/subtract 1 portion)
+                await updateShoppingListServings(recipe, oldServings, newServings);
 
                 console.log(`✅ Servings updated to ${newServings} in Airtable and local cache`);
             } else {
@@ -2594,6 +2597,68 @@ function displayRawShoppingList(ingredients) {
     // Display as formatted JSON
     const jsonString = JSON.stringify(ingredients, null, 2);
     shoppingContent.innerHTML = `<pre style="font-family: monospace; font-size: 12px; white-space: pre-wrap;">${jsonString}</pre>`;
+}
+
+// Update shopping list when servings change (+/- buttons)
+// Add or subtract ingredients for 1 person
+async function updateShoppingListServings(recipe, oldServings, newServings) {
+    try {
+        const difference = newServings - oldServings;
+        console.log(`📊 Servings changed: ${oldServings} → ${newServings} (diff: ${difference > 0 ? '+' : ''}${difference})`);
+
+        // Get current shopping list
+        const list = await getOrCreateShoppingList(currentWeek, currentYear);
+        if (!list) {
+            console.error('Failed to get shopping list');
+            return;
+        }
+
+        // Parse recipe ingredients for 1 person
+        const ingredientsFor1 = parseRecipeIngredients(recipe, 1);
+        console.log(`  → Ingredients for 1 person: ${ingredientsFor1.length}`);
+
+        // Get existing ingredients from list
+        const existingIngredients = JSON.parse(list.ingredientsJSON || '[]');
+        const mergedIngredients = [...existingIngredients];
+
+        // Add or subtract difference × ingredients for 1 person
+        ingredientsFor1.forEach(ing1 => {
+            const existing = mergedIngredients.find(ing =>
+                ing.name === ing1.name && ing.unit === ing1.unit
+            );
+
+            if (existing) {
+                // Add or subtract quantity
+                existing.quantity += (ing1.quantity * difference);
+                console.log(`  ${difference > 0 ? '➕' : '➖'} ${ing1.name}: ${existing.quantity}${existing.unit}`);
+            } else if (difference > 0) {
+                // Only add if increasing (not decreasing non-existent ingredient)
+                mergedIngredients.push({
+                    ...ing1,
+                    quantity: ing1.quantity * difference
+                });
+                console.log(`  ➕ ${ing1.name}: ${ing1.quantity * difference}${ing1.unit} (new)`);
+            }
+        });
+
+        // Update list in Airtable
+        const updateResponse = await fetch(`${API_URL}/api/shopping-list/${currentListId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                ingredients: mergedIngredients
+            })
+        });
+
+        const updateData = await updateResponse.json();
+        if (updateData.success) {
+            console.log(`✅ Shopping list updated after servings change`);
+            displayRawShoppingList(mergedIngredients);
+        }
+
+    } catch (error) {
+        console.error('Error updating shopping list servings:', error);
+    }
 }
 
 // ===== DÉMARRAGE =====
