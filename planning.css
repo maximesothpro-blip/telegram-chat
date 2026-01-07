@@ -786,8 +786,8 @@ body {
     background: white;
     padding: 30px;
     border-radius: 16px;
-    max-width: 500px;
-    max-height: 80vh;
+    max-width: 900px; /* v3.6: Wider for 2 columns */
+    max-height: 85vh;
     overflow-y: auto;
     position: relative;
     box-shadow: 0 10px 40px rgba(124, 58, 237, 0.2);
@@ -826,6 +826,98 @@ body {
     display: block;
     margin-bottom: 5px;
     color: #333;
+}
+
+/* ===== POPUP 2 COLONNES (v3.6) ===== */
+.popup-two-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.popup-left-column,
+.popup-right-column {
+    min-width: 0; /* Prevent overflow */
+}
+
+.popup-right-column {
+    border-left: 2px solid #e9d5ff;
+    padding-left: 30px;
+}
+
+.recipe-steps {
+    list-style: none;
+    counter-reset: step-counter;
+    padding-left: 0;
+}
+
+.recipe-steps li {
+    margin-bottom: 15px;
+    padding-left: 0;
+    line-height: 1.6;
+}
+
+.recipe-steps li strong {
+    display: inline;
+    color: #7c3aed;
+    margin-right: 8px;
+}
+
+/* Popup Servings Control */
+.popup-servings-control {
+    margin-top: 30px;
+    padding: 20px;
+    background: #f3e8ff;
+    border-radius: 12px;
+    border: 2px solid #e9d5ff;
+}
+
+.popup-servings-control label {
+    display: block;
+    font-weight: 600;
+    color: #7c3aed;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.servings-control-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+}
+
+.popup-servings-btn {
+    width: 36px;
+    height: 36px;
+    background: #c4b5fd;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.popup-servings-btn:hover {
+    background: #a78bfa;
+    transform: scale(1.08);
+}
+
+#popupServingsInput {
+    width: 60px;
+    text-align: center;
+    padding: 8px;
+    border: 2px solid #e9d5ff;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    background: white;
+    color: #7c3aed;
 }
 
 /* ===== BOUTON POUR MONTRER LA SIDEBAR ===== */

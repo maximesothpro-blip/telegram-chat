@@ -21,6 +21,26 @@ let isListModified = false; // Track if shopping list has been modified (v3.3)
 // Servings management (v3.5)
 let defaultServings = parseInt(localStorage.getItem('defaultServings')) || 2; // Default number of servings
 
+// Per-meal servings (v3.6) - each planned meal has its own servings count
+// Key = Airtable record ID of planned meal, Value = number of servings
+let mealServings = JSON.parse(localStorage.getItem('mealServings')) || {};
+
+// Helper function to save mealServings to localStorage
+function saveMealServings() {
+    localStorage.setItem('mealServings', JSON.stringify(mealServings));
+}
+
+// Helper function to get servings for a specific meal (fallback to default)
+function getMealServings(recordId) {
+    return mealServings[recordId] || defaultServings;
+}
+
+// Helper function to set servings for a specific meal
+function setMealServings(recordId, servings) {
+    mealServings[recordId] = servings;
+    saveMealServings();
+}
+
 // Éléments DOM
 const recipesList = document.getElementById('recipesList');
 const calendar = document.getElementById('calendar');
@@ -224,9 +244,13 @@ function displayPlanning() {
 
         // Afficher la recette dans le slot
         const mealContent = slot.querySelector('.meal-content');
+
+        // v3.6: Get meal-specific servings
+        const mealServingsCount = getMealServings(item.id);
+
         mealContent.innerHTML = `
             <div class="planned-recipe" data-record-id="${item.id}" data-recipe-id="${item.recipe[0] || ''}">
-                <span class="recipe-name-text">${recipeName} <span class="servings-indicator">👤 × ${defaultServings}</span></span>
+                <span class="recipe-name-text">${recipeName} <span class="servings-indicator">👤 × ${mealServingsCount}</span></span>
                 <button class="delete-recipe-btn" data-record-id="${item.id}">×</button>
             </div>
         `;
@@ -242,7 +266,8 @@ function displayPlanning() {
         const plannedRecipeDiv = mealContent.querySelector('.planned-recipe');
         plannedRecipeDiv.addEventListener('click', () => {
             if (recipeData) {
-                showRecipePopup(recipeData);
+                // v3.6: Pass recordId to popup to manage meal-specific servings
+                showRecipePopup(recipeData, item.id);
             }
         });
     });
@@ -399,9 +424,13 @@ async function handleDrop(e) {
         if (data.success && data.record) {
             // Mettre à jour avec le bouton delete
             const recordId = data.record.id;
+
+            // v3.6: Initialize servings for this meal with default value
+            setMealServings(recordId, defaultServings);
+
             mealContent.innerHTML = `
                 <div class="planned-recipe" data-record-id="${recordId}" data-recipe-id="${recipeId}">
-                    <span class="recipe-name-text">${recipeName}</span>
+                    <span class="recipe-name-text">${recipeName} <span class="servings-indicator">👤 × ${defaultServings}</span></span>
                     <button class="delete-recipe-btn" data-record-id="${recordId}">×</button>
                 </div>
             `;
@@ -470,33 +499,196 @@ async function deleteRecipeFromPlanning(recordId, slot) {
     }
 }
 
-// ===== POPUP RECETTE =====
-function showRecipePopup(recipe) {
+// ===== POPUP RECETTE (v3.6 - Refonte) =====
+function showRecipePopup(recipe, recordId = null) {
     const popupTitle = document.getElementById('popupTitle');
     const popupBody = document.getElementById('popupBody');
 
+    // Get current servings for this meal (or default if clicked from recipe list)
+    const currentServings = recordId ? getMealServings(recordId) : defaultServings;
+
     popupTitle.textContent = recipe.name;
 
+    // Parse ingredients
+    let ingredientsList = [];
+    try {
+        ingredientsList = typeof recipe.ingredients === 'string'
+            ? JSON.parse(recipe.ingredients)
+            : recipe.ingredients;
+    } catch (e) {
+        console.warn('Could not parse ingredients:', e);
+        ingredientsList = [];
+    }
+
+    // Format ingredients with quantities multiplied by servings
+    const ingredientsHTML = ingredientsList.map(item => {
+        const name = item.ingredient || item.nom || 'Ingrédient inconnu';
+        const baseQuantity = parseFloat(item.quantite) || 0;
+        const adjustedQuantity = baseQuantity * currentServings;
+        const unit = item.unite || '';
+
+        return `<li>${adjustedQuantity}${unit} ${name}</li>`;
+    }).join('');
+
+    // Parse recipe steps
+    let recipeSteps = [];
+    try {
+        recipeSteps = typeof recipe.recipe === 'string'
+            ? JSON.parse(recipe.recipe)
+            : (recipe.recipe || []);
+    } catch (e) {
+        console.warn('Could not parse recipe steps:', e);
+        recipeSteps = [];
+    }
+
+    // Format recipe steps
+    const recipeStepsHTML = recipeSteps.map((step, index) =>
+        `<li><strong>Étape ${index + 1}:</strong> ${step}</li>`
+    ).join('');
+
+    // Two-column layout
     popupBody.innerHTML = `
-        <div class="popup-section">
-            <strong>Tags:</strong>
-            ${recipe.tags.join(', ') || 'Aucun'}
-        </div>
-        <div class="popup-section">
-            <strong>Informations nutritionnelles:</strong>
-            <ul>
-                <li>Protéines: ${recipe.proteins}g</li>
-                <li>Glucides: ${recipe.carbs}g</li>
-                <li>Lipides: ${recipe.fats}g</li>
-            </ul>
-        </div>
-        <div class="popup-section">
-            <strong>Portions:</strong>
-            ${recipe.servings} personne(s)
+        <div class="popup-two-columns" data-record-id="${recordId || ''}">
+            <!-- Left column: Info -->
+            <div class="popup-left-column">
+                <div class="popup-section">
+                    <strong>Description:</strong>
+                    <p>${recipe.description || 'Pas de description disponible'}</p>
+                </div>
+
+                <div class="popup-section">
+                    <strong>Valeurs nutritionnelles (pour 1 personne):</strong>
+                    <ul>
+                        <li>🔥 Calories: ${recipe.calories} kcal</li>
+                        <li>💪 Protéines: ${recipe.proteins}g</li>
+                        <li>🍞 Glucides: ${recipe.carbs}g</li>
+                        <li>🥑 Lipides: ${recipe.fats}g</li>
+                    </ul>
+                </div>
+
+                <div class="popup-section">
+                    <strong>Ingrédients (pour ${currentServings} personne${currentServings > 1 ? 's' : ''}):</strong>
+                    <ul id="ingredientsList">
+                        ${ingredientsHTML || '<li>Aucun ingrédient</li>'}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Right column: Recipe + Servings control -->
+            <div class="popup-right-column">
+                <div class="popup-section">
+                    <strong>Recette étape par étape:</strong>
+                    <ol class="recipe-steps">
+                        ${recipeStepsHTML || '<li>Pas d\'étapes disponibles</li>'}
+                    </ol>
+                </div>
+
+                ${recordId ? `
+                <div class="popup-servings-control">
+                    <label>👤 Nombre de personnes:</label>
+                    <div class="servings-control-inline">
+                        <button class="popup-servings-btn" id="popupDecreaseServings">−</button>
+                        <input type="number" id="popupServingsInput" min="1" max="20" value="${currentServings}" />
+                        <button class="popup-servings-btn" id="popupIncreaseServings">+</button>
+                    </div>
+                </div>
+                ` : ''}
+            </div>
         </div>
     `;
 
     recipePopup.classList.add('active');
+
+    // Add event listeners for servings control (only if recordId exists)
+    if (recordId) {
+        setupPopupServingsControl(recipe, recordId);
+    }
+}
+
+// Setup servings control in popup
+function setupPopupServingsControl(recipe, recordId) {
+    const decreaseBtn = document.getElementById('popupDecreaseServings');
+    const increaseBtn = document.getElementById('popupIncreaseServings');
+    const servingsInput = document.getElementById('popupServingsInput');
+
+    if (!decreaseBtn || !increaseBtn || !servingsInput) return;
+
+    const updatePopupServings = (newServings) => {
+        setMealServings(recordId, newServings);
+        servingsInput.value = newServings;
+
+        // Update ingredients display
+        updatePopupIngredients(recipe, newServings);
+
+        // Update planning display to show new servings
+        updateMealServingsDisplay(recordId, newServings);
+    };
+
+    decreaseBtn.addEventListener('click', () => {
+        let current = parseInt(servingsInput.value);
+        if (current > 1) {
+            updatePopupServings(current - 1);
+        }
+    });
+
+    increaseBtn.addEventListener('click', () => {
+        let current = parseInt(servingsInput.value);
+        if (current < 20) {
+            updatePopupServings(current + 1);
+        }
+    });
+
+    servingsInput.addEventListener('change', () => {
+        let value = parseInt(servingsInput.value);
+        if (isNaN(value) || value < 1) value = 1;
+        if (value > 20) value = 20;
+        updatePopupServings(value);
+    });
+}
+
+// Update ingredients quantities in popup
+function updatePopupIngredients(recipe, servings) {
+    const ingredientsList = document.getElementById('ingredientsList');
+    if (!ingredientsList) return;
+
+    let ingredients = [];
+    try {
+        ingredients = typeof recipe.ingredients === 'string'
+            ? JSON.parse(recipe.ingredients)
+            : recipe.ingredients;
+    } catch (e) {
+        console.warn('Could not parse ingredients:', e);
+        return;
+    }
+
+    const ingredientsHTML = ingredients.map(item => {
+        const name = item.ingredient || item.nom || 'Ingrédient inconnu';
+        const baseQuantity = parseFloat(item.quantite) || 0;
+        const adjustedQuantity = baseQuantity * servings;
+        const unit = item.unite || '';
+
+        return `<li>${adjustedQuantity}${unit} ${name}</li>`;
+    }).join('');
+
+    ingredientsList.innerHTML = ingredientsHTML || '<li>Aucun ingrédient</li>';
+
+    // Update servings label
+    const section = ingredientsList.closest('.popup-section');
+    const strong = section.querySelector('strong');
+    if (strong) {
+        strong.textContent = `Ingrédients (pour ${servings} personne${servings > 1 ? 's' : ''}):`;
+    }
+}
+
+// Update meal servings display in planning
+function updateMealServingsDisplay(recordId, servings) {
+    const plannedRecipe = document.querySelector(`[data-record-id="${recordId}"]`);
+    if (!plannedRecipe) return;
+
+    const servingsIndicator = plannedRecipe.querySelector('.servings-indicator');
+    if (servingsIndicator) {
+        servingsIndicator.textContent = `👤 × ${servings}`;
+    }
 }
 
 closePopup.addEventListener('click', () => {
