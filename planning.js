@@ -2499,20 +2499,20 @@ async function getOrCreateShoppingList(week, year) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                week: week,
-                year: year,
+                semaine: week,
+                annee: year,
                 ingredients: [],
                 repasInclus: {}
             })
         });
 
         const createData = await createResponse.json();
-        if (createData.success) {
-            currentListId = createData.record.id;
+        if (createData.success && createData.shoppingList) {
+            currentListId = createData.shoppingList.id;
             console.log(`✓ Created new list: ${currentListId}`);
             return {
                 id: currentListId,
-                ingredientsJSON: '[]'
+                ingredientsJSON: createData.shoppingList['Ingrédients JSON'] || '[]'
             };
         }
 
