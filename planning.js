@@ -34,6 +34,7 @@ const createRecipeBtn = document.getElementById('createRecipeBtn');
 const createRecipePopup = document.getElementById('createRecipePopup');
 const closeCreateRecipePopup = document.getElementById('closeCreateRecipePopup');
 const createRecipeForm = document.getElementById('createRecipeForm');
+const recipeLoading = document.getElementById('recipeLoading');
 const recipePreview = document.getElementById('recipePreview');
 const recipePreviewContent = document.getElementById('recipePreviewContent');
 const recipeModifyBtn = document.getElementById('recipeModifyBtn');
@@ -2795,10 +2796,10 @@ createRecipeForm.addEventListener('submit', async (e) => {
     console.log('📝 Sending recipe to n8n:', formData);
 
     try {
-        // Disable submit button
-        const submitBtn = e.target.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Envoi en cours...';
+        // Hide form, show loading
+        createRecipeForm.style.display = 'none';
+        recipeLoading.style.display = 'block';
+        recipePreview.style.display = 'none';
 
         // Send to backend which will forward to n8n
         const response = await fetch(`${API_URL}/api/create-recipe`, {
@@ -2816,21 +2817,20 @@ createRecipeForm.addEventListener('submit', async (e) => {
         const result = await response.json();
         console.log('✅ n8n response:', result);
 
-        // Display preview
+        // Display preview with n8n response
         displayRecipePreview(result);
 
-        // Hide form, show preview
-        createRecipeForm.style.display = 'none';
+        // Hide loading, show preview
+        recipeLoading.style.display = 'none';
         recipePreview.style.display = 'block';
 
     } catch (error) {
         console.error('❌ Error sending to n8n:', error);
         alert('Erreur lors de la création de la recette. Veuillez réessayer.');
 
-        // Re-enable submit button
-        const submitBtn = e.target.querySelector('button[type="submit"]');
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Créer';
+        // Hide loading, show form again
+        recipeLoading.style.display = 'none';
+        createRecipeForm.style.display = 'block';
     }
 });
 
@@ -2861,14 +2861,10 @@ function displayRecipePreview(recipeData) {
 
 // Modify button - go back to form
 recipeModifyBtn.addEventListener('click', () => {
-    // Show form, hide preview
+    // Show form, hide preview and loading
     createRecipeForm.style.display = 'block';
     recipePreview.style.display = 'none';
-
-    // Re-enable submit button
-    const submitBtn = createRecipeForm.querySelector('button[type="submit"]');
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Créer';
+    recipeLoading.style.display = 'none';
 });
 
 // Accept button - save recipe and close
@@ -2882,6 +2878,7 @@ recipeAcceptBtn.addEventListener('click', async () => {
     createRecipeForm.reset();
     createRecipeForm.style.display = 'block';
     recipePreview.style.display = 'none';
+    recipeLoading.style.display = 'none';
     createRecipePopup.classList.remove('active');
 
     // Reload recipes to show the new one

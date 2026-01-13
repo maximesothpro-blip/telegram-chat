@@ -1504,3 +1504,39 @@ body {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
 }
+
+/* ===== RECIPE LOADING (v3.10) ===== */
+.recipe-loading {
+    text-align: center;
+    padding: 40px 20px;
+    margin-top: 24px;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #e9d5ff;
+    border-top: 4px solid #a78bfa;
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.recipe-loading p {
+    color: #6b21a8;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 8px 0;
+}
+
+.recipe-loading .loading-subtext {
+    color: #9333ea;
+    font-size: 14px;
+    font-weight: 400;
+    opacity: 0.8;
+}
