@@ -817,9 +817,8 @@ async function reloadWeek() {
     await loadPlanning();
     createCalendar();
     displayPlanning();
-    // v3.8: Shopping list disabled for rebuild
-    // initializeMealInclusions();
-    // await initializeShoppingList();
+    // v3.10: Load shopping list for new week
+    await loadShoppingListOnStartup();
 }
 
 // ===== SERVINGS CONTROL (v3.5) =====
