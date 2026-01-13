@@ -1,5 +1,26 @@
 # Historique des versions - Planning de Repas
 
+## v3.10.1-beta (2026-01-13)
+### Corrections et améliorations : Création de recettes
+- **État de chargement** : Ajout d'un spinner animé pendant le traitement n8n
+- **Fix CORS** : Appel au backend au lieu d'appeler n8n directement depuis le frontend
+- **Affichage preview** : La prévisualisation n'apparaît que APRÈS réception de la réponse n8n
+- **Sécurité** : URL du webhook n8n cachée côté frontend
+
+### Modifications techniques
+- **Backend** : Nouvelle route `/api/create-recipe` qui fait proxy vers n8n
+- **Frontend** :
+  - Ajout section `recipeLoading` avec spinner CSS animé
+  - Modification du flux : Form → Loading → Preview (avec vraies données)
+  - Gestion d'état améliorée (form/loading/preview)
+- **config.js** : Suppression de l'URL n8n webhook (maintenant dans backend)
+
+### Déploiement requis
+- ⚠️ **Backend doit être redéployé** avec le nouveau `server.js`
+- Frontend déjà déployé sur GitHub Pages
+
+---
+
 ## v3.10.0-beta (2026-01-13)
 ### Nouvelle fonctionnalité : Création de recettes
 - **Suppression du bot** : Le chat bot a été entièrement supprimé de l'interface
