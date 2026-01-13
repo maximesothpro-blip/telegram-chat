@@ -30,9 +30,10 @@ const showSidebar = document.getElementById('showSidebar');
 const refreshRecipes = document.getElementById('refreshRecipes');
 const recipePopup = document.getElementById('recipePopup');
 const closePopup = document.getElementById('closePopup');
-const chatForm = document.getElementById('chatForm');
-const messageInput = document.getElementById('messageInput');
-const chatMessages = document.getElementById('chatMessages');
+const createRecipeBtn = document.getElementById('createRecipeBtn');
+const createRecipePopup = document.getElementById('createRecipePopup');
+const closeCreateRecipePopup = document.getElementById('closeCreateRecipePopup');
+const createRecipeForm = document.getElementById('createRecipeForm');
 const prevWeek = document.getElementById('prevWeek');
 const nextWeek = document.getElementById('nextWeek');
 const weekDisplay = document.getElementById('weekDisplay');
@@ -71,7 +72,6 @@ async function init() {
     // v3.9: Load shopping list on startup
     await loadShoppingListOnStartup();
     setupEventListeners();
-    setupTabs();
 }
 
 // ===== METTRE À JOUR L'AFFICHAGE DE LA SEMAINE =====
@@ -759,51 +759,6 @@ recipePopup.addEventListener('click', (e) => {
         recipePopup.classList.remove('active');
     }
 });
-
-// ===== CHAT BOT =====
-chatForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const message = messageInput.value.trim();
-    if (!message) return;
-
-    // Ajouter le message utilisateur
-    addChatMessage(message, 'user');
-    messageInput.value = '';
-
-    try {
-        const response = await fetch(`${API_URL}/api/send-message`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ message })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            addChatMessage(data.response, 'bot');
-        }
-    } catch (error) {
-        console.error('Chat error:', error);
-        addChatMessage('Erreur de connexion au bot', 'bot');
-    }
-});
-
-function addChatMessage(text, sender) {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${sender}-message`;
-
-    messageDiv.innerHTML = `
-        <div class="message-content">
-            <p>${text}</p>
-        </div>
-    `;
-
-    chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
 
 // ===== TOGGLE SIDEBAR =====
 toggleSidebar.addEventListener('click', () => {
@@ -1493,26 +1448,6 @@ async function addMealToShoppingList(recipeId) {
     } catch (error) {
         console.error('Error adding meal to shopping list:', error);
     }
-}
-
-// ===== GESTION DES ONGLETS =====
-function setupTabs() {
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    const tabContents = document.querySelectorAll('.tab-content');
-
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const targetTab = btn.dataset.tab;
-
-            // Retirer l'active de tous les boutons et contenus
-            tabBtns.forEach(b => b.classList.remove('active'));
-            tabContents.forEach(c => c.classList.remove('active'));
-
-            // Activer le bouton et contenu sélectionné
-            btn.classList.add('active');
-            document.getElementById(`${targetTab}Tab`).classList.add('active');
-        });
-    });
 }
 
 // ===== LISTE DE COURSES =====
@@ -2820,6 +2755,48 @@ async function loadShoppingListOnStartup() {
         console.error('Error loading shopping list on startup:', error);
     }
 }
+
+// ===== CRÉATION DE RECETTE (v3.10) =====
+
+// Open create recipe popup
+createRecipeBtn.addEventListener('click', () => {
+    createRecipePopup.classList.add('active');
+});
+
+// Close create recipe popup
+closeCreateRecipePopup.addEventListener('click', () => {
+    createRecipePopup.classList.remove('active');
+});
+
+// Close on outside click
+createRecipePopup.addEventListener('click', (e) => {
+    if (e.target === createRecipePopup) {
+        createRecipePopup.classList.remove('active');
+    }
+});
+
+// Handle form submission
+createRecipeForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // Get form data
+    const formData = {
+        title: document.getElementById('recipeTitle').value,
+        description: document.getElementById('recipeDescription').value,
+        ingredients: document.getElementById('recipeIngredients').value,
+        recipe: document.getElementById('recipeSteps').value
+    };
+
+    console.log('📝 New recipe data:', formData);
+
+    // TODO: Connect to n8n workflow
+    // For now, just log and close popup
+    alert('Recette créée ! (n8n à connecter)');
+
+    // Reset form and close popup
+    createRecipeForm.reset();
+    createRecipePopup.classList.remove('active');
+});
 
 // ===== DÉMARRAGE =====
 init();

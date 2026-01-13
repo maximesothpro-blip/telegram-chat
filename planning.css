@@ -1315,3 +1315,118 @@ body {
     padding: 2px 8px;
     border-radius: 4px;
 }
+
+/* ===== CRÉER RECETTE BUTTON & SHOPPING TITLE (v3.10) ===== */
+.create-recipe-btn {
+    background: linear-gradient(135deg, #c4b5fd 0%, #a78bfa 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.create-recipe-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(167, 139, 250, 0.3);
+}
+
+.shopping-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #6b21a8;
+    margin: 16px 0 12px 0;
+    padding: 0 16px;
+}
+
+/* ===== CREATE RECIPE POPUP (v3.10) ===== */
+.create-recipe-popup {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.create-recipe-popup.active {
+    display: flex;
+}
+
+.create-recipe-popup-content {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.create-recipe-popup-content h2 {
+    color: #6b21a8;
+    margin-bottom: 24px;
+    font-size: 24px;
+}
+
+.create-recipe-form .form-group {
+    margin-bottom: 20px;
+}
+
+.create-recipe-form label {
+    display: block;
+    font-weight: 600;
+    color: #6b21a8;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.create-recipe-form input[type="text"],
+.create-recipe-form textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e9d5ff;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+.create-recipe-form input[type="text"]:focus,
+.create-recipe-form textarea:focus {
+    outline: none;
+    border-color: #c4b5fd;
+}
+
+.create-recipe-form textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.create-recipe-submit-btn {
+    background: linear-gradient(135deg, #c4b5fd 0%, #a78bfa 100%);
+    color: white;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    width: 100%;
+    transition: all 0.2s;
+    margin-top: 8px;
+}
+
+.create-recipe-submit-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(167, 139, 250, 0.4);
+}

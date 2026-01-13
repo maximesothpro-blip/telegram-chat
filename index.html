@@ -56,59 +56,17 @@
             </div>
         </main>
 
-        <!-- Sidebar droite : Bot & Liste de courses -->
+        <!-- Sidebar droite : Liste de courses -->
         <aside class="right-sidebar">
-            <!-- Onglets -->
-            <div class="tabs-header">
-                <button class="tab-btn active" data-tab="bot">Bot</button>
-                <button class="tab-btn" data-tab="shopping">Liste de courses</button>
-            </div>
-
-            <!-- Contenu Bot -->
-            <div class="tab-content active" id="botTab">
-                <div class="chat-container">
-                    <div class="chat-messages" id="chatMessages">
-                        <div class="message bot-message">
-                            <div class="message-content">
-                                <p>Bonjour ! Je peux vous aider à créer des recettes.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="chat-input-container">
-                        <form class="chat-input-form" id="chatForm">
-                            <input
-                                type="text"
-                                class="chat-input"
-                                id="messageInput"
-                                placeholder="Votre message..."
-                                autocomplete="off"
-                            />
-                            <button type="submit" class="send-button">➤</button>
-                        </form>
-                    </div>
+            <div class="shopping-container">
+                <div class="shopping-header">
+                    <button class="create-recipe-btn" id="createRecipeBtn">➕ Créer recette</button>
+                    <button class="settings-btn" id="settingsBtn" title="Paramètres">⚙️</button>
+                    <button class="clear-list-btn" id="clearList" title="Vider la liste">🗑️</button>
                 </div>
-            </div>
-
-            <!-- Contenu Liste de courses -->
-            <div class="tab-content" id="shoppingTab">
-                <div class="shopping-container">
-                    <div class="shopping-header">
-                        <button class="generate-list-btn" id="generateList">🔄 Rafraîchir</button>
-                        <button class="settings-btn" id="settingsBtn" title="Paramètres">⚙️</button>
-                        <button class="clear-list-btn" id="clearList" title="Vider la liste">🗑️</button>
-                        <button class="export-list-btn" id="exportList" style="display:none;">Exporter</button>
-                        <span class="save-status" id="saveStatus"></span>
-                    </div>
-                    <div class="shopping-content" id="shoppingContent">
-                        <p class="empty-shopping">Cliquez sur "Générer la liste" pour créer votre liste de courses.</p>
-                    </div>
-                    <!-- Shopping History Section -->
-                    <div class="shopping-history" id="shoppingHistory">
-                        <h3>📋 Listes précédentes</h3>
-                        <div class="history-items" id="historyItems">
-                            <p class="loading">Chargement...</p>
-                        </div>
-                    </div>
+                <h2 class="shopping-title">Liste de courses</h2>
+                <div class="shopping-content" id="shoppingContent">
+                    <p class="empty-shopping">Aucun ingrédient dans la liste</p>
                 </div>
             </div>
         </aside>
@@ -175,8 +133,39 @@
         </div>
     </div>
 
+    <!-- Popup Création de recette -->
+    <div class="create-recipe-popup" id="createRecipePopup">
+        <div class="create-recipe-popup-content">
+            <button class="close-popup" id="closeCreateRecipePopup">×</button>
+            <h2>Créer une nouvelle recette</h2>
+            <form id="createRecipeForm" class="create-recipe-form">
+                <div class="form-group">
+                    <label for="recipeTitle">Titre</label>
+                    <input type="text" id="recipeTitle" name="title" required placeholder="Nom de la recette">
+                </div>
+
+                <div class="form-group">
+                    <label for="recipeDescription">Description</label>
+                    <textarea id="recipeDescription" name="description" rows="3" placeholder="Courte description de la recette"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="recipeIngredients">Ingrédients</label>
+                    <textarea id="recipeIngredients" name="ingredients" rows="8" required placeholder="Liste des ingrédients (texte libre)"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="recipeSteps">Recette</label>
+                    <textarea id="recipeSteps" name="recipe" rows="8" required placeholder="Étapes de préparation"></textarea>
+                </div>
+
+                <button type="submit" class="create-recipe-submit-btn">Créer</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Version -->
-    <div class="version-info">v3.9.8-beta</div>
+    <div class="version-info">v3.10.0-beta</div>
 
     <script src="config.js"></script>
     <script src="planning.js"></script>

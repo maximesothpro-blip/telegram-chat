@@ -1,5 +1,24 @@
 # Historique des versions - Planning de Repas
 
+## v3.10.0-beta (2026-01-13)
+### Nouvelle fonctionnalité : Création de recettes
+- **Suppression du bot** : Le chat bot a été entièrement supprimé de l'interface
+- **Liste de courses plein écran** : La liste de courses occupe maintenant toute la sidebar droite
+- **Bouton "Créer recette"** : Nouveau bouton dans le header de la liste de courses
+- **Popup de création** : Formulaire avec 4 champs (Titre, Description, Ingrédients, Recette)
+- **Design cohérent** : Style pastel violet assorti au thème global
+
+### Modifications techniques
+- **HTML** : Suppression tabs et bot content, ajout popup création recette
+- **CSS** : Nouveaux styles pour `.create-recipe-btn`, `.shopping-title`, `.create-recipe-popup`
+- **JavaScript** :
+  - Suppression `setupTabs()`, `chatForm` handler, `addChatMessage()`
+  - Nouveaux event listeners pour la popup (ouvrir, fermer, soumettre)
+  - Code v3.10 (lignes 2759-2799)
+- **Note** : Intégration n8n à venir dans une prochaine version
+
+---
+
 ## v3.9.6-beta (2026-01-13)
 ### Refonte complète liste de courses
 - **Architecture clean restart** : Code entièrement réécrit pour la liste de courses
