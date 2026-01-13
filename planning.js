@@ -34,6 +34,10 @@ const createRecipeBtn = document.getElementById('createRecipeBtn');
 const createRecipePopup = document.getElementById('createRecipePopup');
 const closeCreateRecipePopup = document.getElementById('closeCreateRecipePopup');
 const createRecipeForm = document.getElementById('createRecipeForm');
+const recipePreview = document.getElementById('recipePreview');
+const recipePreviewContent = document.getElementById('recipePreviewContent');
+const recipeModifyBtn = document.getElementById('recipeModifyBtn');
+const recipeAcceptBtn = document.getElementById('recipeAcceptBtn');
 const prevWeek = document.getElementById('prevWeek');
 const nextWeek = document.getElementById('nextWeek');
 const weekDisplay = document.getElementById('weekDisplay');
@@ -2788,15 +2792,100 @@ createRecipeForm.addEventListener('submit', async (e) => {
         recipe: document.getElementById('recipeSteps').value
     };
 
-    console.log('📝 New recipe data:', formData);
+    console.log('📝 Sending recipe to n8n:', formData);
 
-    // TODO: Connect to n8n workflow
-    // For now, just log and close popup
-    alert('Recette créée ! (n8n à connecter)');
+    try {
+        // Disable submit button
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Envoi en cours...';
 
-    // Reset form and close popup
+        // Send to n8n webhook
+        const response = await fetch(window.N8N_CREATE_RECIPE_WEBHOOK, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('✅ n8n response:', result);
+
+        // Display preview
+        displayRecipePreview(result);
+
+        // Hide form, show preview
+        createRecipeForm.style.display = 'none';
+        recipePreview.style.display = 'block';
+
+    } catch (error) {
+        console.error('❌ Error sending to n8n:', error);
+        alert('Erreur lors de la création de la recette. Veuillez réessayer.');
+
+        // Re-enable submit button
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Créer';
+    }
+});
+
+// Display recipe preview from n8n response
+function displayRecipePreview(recipeData) {
+    let html = '';
+
+    if (recipeData.title) {
+        html += `<h4>${recipeData.title}</h4>`;
+    }
+
+    if (recipeData.description) {
+        html += `<p><strong>Description:</strong> ${recipeData.description}</p>`;
+    }
+
+    if (recipeData.ingredients) {
+        html += `<p><strong>Ingrédients:</strong></p>`;
+        html += `<p>${recipeData.ingredients}</p>`;
+    }
+
+    if (recipeData.recipe) {
+        html += `<p><strong>Recette:</strong></p>`;
+        html += `<p>${recipeData.recipe}</p>`;
+    }
+
+    recipePreviewContent.innerHTML = html;
+}
+
+// Modify button - go back to form
+recipeModifyBtn.addEventListener('click', () => {
+    // Show form, hide preview
+    createRecipeForm.style.display = 'block';
+    recipePreview.style.display = 'none';
+
+    // Re-enable submit button
+    const submitBtn = createRecipeForm.querySelector('button[type="submit"]');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Créer';
+});
+
+// Accept button - save recipe and close
+recipeAcceptBtn.addEventListener('click', async () => {
+    console.log('✅ Recipe accepted by user');
+
+    // TODO: Save to Airtable or trigger another n8n workflow
+    alert('Recette acceptée ! (Sauvegarde à implémenter)');
+
+    // Reset and close
     createRecipeForm.reset();
+    createRecipeForm.style.display = 'block';
+    recipePreview.style.display = 'none';
     createRecipePopup.classList.remove('active');
+
+    // Reload recipes to show the new one
+    await loadRecipes();
 });
 
 // ===== DÉMARRAGE =====
