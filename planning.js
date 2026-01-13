@@ -2800,8 +2800,8 @@ createRecipeForm.addEventListener('submit', async (e) => {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Envoi en cours...';
 
-        // Send to n8n webhook
-        const response = await fetch(window.N8N_CREATE_RECIPE_WEBHOOK, {
+        // Send to backend which will forward to n8n
+        const response = await fetch(`${API_URL}/api/create-recipe`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
