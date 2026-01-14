@@ -18,6 +18,9 @@ let autoSaveTimer = null; // Timer for auto-save debounce
 let isSaving = false; // Track save status
 let isListModified = false; // Track if shopping list has been modified (v3.3)
 
+// Recipe creation management (v3.10.2)
+let currentRecipeData = null; // Store recipe data from n8n for Accept button
+
 // Servings management (v3.7 - Moved to Airtable)
 let defaultServings = parseInt(localStorage.getItem('defaultServings')) || 2; // Default number of servings
 
@@ -2821,6 +2824,9 @@ createRecipeForm.addEventListener('submit', async (e) => {
         console.log('✅ n8n response keys:', Object.keys(result));
         console.log('✅ n8n response stringified:', JSON.stringify(result, null, 2));
 
+        // Store recipe data for Accept button
+        currentRecipeData = result;
+
         // Display preview with n8n response
         displayRecipePreview(result);
 
@@ -2926,6 +2932,9 @@ recipeModifyBtn.addEventListener('click', () => {
     createRecipeForm.style.display = 'block';
     recipePreview.style.display = 'none';
     recipeLoading.style.display = 'none';
+
+    // Clear stored recipe data
+    currentRecipeData = null;
 });
 
 // Accept button - save recipe and close
@@ -2937,12 +2946,13 @@ recipeAcceptBtn.addEventListener('click', async () => {
         recipeAcceptBtn.disabled = true;
         recipeAcceptBtn.textContent = 'Enregistrement...';
 
-        // Call backend to accept recipe
+        // Call backend to accept recipe with recipe data
         const response = await fetch(`${API_URL}/api/accept-recipe`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
-            }
+            },
+            body: JSON.stringify(currentRecipeData)
         });
 
         if (!response.ok) {
