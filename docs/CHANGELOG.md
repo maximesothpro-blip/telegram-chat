@@ -1,5 +1,32 @@
 # Historique des versions - Planning de Repas
 
+## v3.10.2-beta (2026-01-13)
+### Nouvelle fonctionnalité : Bouton Accepter recette
+- **Bouton "Accepter"** : Enregistrement de la recette via n8n
+- **Notification stylée** : Popup vert avec animation qui apparaît en haut à droite
+- **Feedback utilisateur** : Message "Recette enregistrée avec succès !" pendant 3 secondes
+- **Gestion d'erreur** : Notification rouge en cas d'échec
+
+### Modifications techniques
+- **Backend** : Nouvelle route `/api/accept-recipe` qui appelle le webhook n8n
+- **Frontend** :
+  - Nouveau composant `notification-popup` avec animation CSS
+  - Fonction `showNotification(message, type)` réutilisable
+  - Bouton "Accepter" désactivé pendant l'enregistrement
+  - Auto-rechargement de la liste des recettes après acceptation
+
+### Améliorations preview
+- **Affichage ingrédients** : Liste à puces formatée depuis JSON array
+- **Affichage recette** : Liste numérotée des étapes
+- **Valeurs nutritionnelles** : Grid 2 colonnes avec icônes (calories, protéines, glucides, lipides)
+- **Design amélioré** : Sections bien séparées avec couleurs et spacing
+
+### Déploiement requis
+- ⚠️ **Backend doit être redéployé** avec le nouveau `server.js`
+- Frontend déjà déployé sur GitHub Pages
+
+---
+
 ## v3.10.1-beta (2026-01-13)
 ### Corrections et améliorations : Création de recettes
 - **État de chargement** : Ajout d'un spinner animé pendant le traitement n8n

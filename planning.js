@@ -39,6 +39,8 @@ const recipePreview = document.getElementById('recipePreview');
 const recipePreviewContent = document.getElementById('recipePreviewContent');
 const recipeModifyBtn = document.getElementById('recipeModifyBtn');
 const recipeAcceptBtn = document.getElementById('recipeAcceptBtn');
+const notificationPopup = document.getElementById('notificationPopup');
+const notificationMessage = document.getElementById('notificationMessage');
 const prevWeek = document.getElementById('prevWeek');
 const nextWeek = document.getElementById('nextWeek');
 const weekDisplay = document.getElementById('weekDisplay');
@@ -2930,19 +2932,73 @@ recipeModifyBtn.addEventListener('click', () => {
 recipeAcceptBtn.addEventListener('click', async () => {
     console.log('✅ Recipe accepted by user');
 
-    // TODO: Save to Airtable or trigger another n8n workflow
-    alert('Recette acceptée ! (Sauvegarde à implémenter)');
+    try {
+        // Disable button
+        recipeAcceptBtn.disabled = true;
+        recipeAcceptBtn.textContent = 'Enregistrement...';
 
-    // Reset and close
-    createRecipeForm.reset();
-    createRecipeForm.style.display = 'block';
-    recipePreview.style.display = 'none';
-    recipeLoading.style.display = 'none';
-    createRecipePopup.classList.remove('active');
+        // Call backend to accept recipe
+        const response = await fetch(`${API_URL}/api/accept-recipe`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
 
-    // Reload recipes to show the new one
-    await loadRecipes();
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('✅ Recipe accepted:', result);
+
+        // Show success notification
+        showNotification('Recette enregistrée avec succès !');
+
+        // Reset and close
+        createRecipeForm.reset();
+        createRecipeForm.style.display = 'block';
+        recipePreview.style.display = 'none';
+        recipeLoading.style.display = 'none';
+        createRecipePopup.classList.remove('active');
+
+        // Re-enable button
+        recipeAcceptBtn.disabled = false;
+        recipeAcceptBtn.textContent = 'Accepter';
+
+        // Reload recipes to show the new one
+        await loadRecipes();
+
+    } catch (error) {
+        console.error('❌ Error accepting recipe:', error);
+        showNotification('Erreur lors de l\'enregistrement', 'error');
+
+        // Re-enable button
+        recipeAcceptBtn.disabled = false;
+        recipeAcceptBtn.textContent = 'Accepter';
+    }
 });
+
+// Show notification popup
+function showNotification(message, type = 'success') {
+    notificationMessage.textContent = message;
+
+    // Change style based on type
+    const notificationContent = notificationPopup.querySelector('.notification-content');
+    if (type === 'error') {
+        notificationContent.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+    } else {
+        notificationContent.style.background = 'linear-gradient(135deg, #34d399 0%, #10b981 100%)';
+    }
+
+    // Show notification
+    notificationPopup.classList.add('show');
+
+    // Hide after 3 seconds
+    setTimeout(() => {
+        notificationPopup.classList.remove('show');
+    }, 3000);
+}
 
 // ===== DÉMARRAGE =====
 init();
