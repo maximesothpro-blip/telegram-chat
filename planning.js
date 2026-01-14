@@ -2947,6 +2947,9 @@ recipeAcceptBtn.addEventListener('click', async () => {
         recipeAcceptBtn.textContent = 'Enregistrement...';
 
         // Call backend to accept recipe with recipe data
+        console.log('📤 Sending to accept webhook:', currentRecipeData);
+        console.log('📤 JSON stringified:', JSON.stringify(currentRecipeData));
+
         const response = await fetch(`${API_URL}/api/accept-recipe`, {
             method: 'POST',
             headers: {
