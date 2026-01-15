@@ -1,4 +1,4 @@
-// Planning de Repas - v3.11.3-beta
+// Planning de Repas - v3.11.4-test
 // Configuration
 const API_URL = window.BACKEND_API_URL || 'http://localhost:3000';
 
