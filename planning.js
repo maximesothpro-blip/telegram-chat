@@ -2289,6 +2289,7 @@ function displayShoppingList() {
             const quantityStr = item.quantity % 1 === 0
                 ? item.quantity
                 : item.quantity.toFixed(1);
+            // Format with space between quantity and unit: "200 g de farine"
             html += `<li>${quantityStr} ${item.unit} ${item.name}</li>`;
         });
 
@@ -2945,7 +2946,13 @@ recipeModifyBtn.addEventListener('click', () => {
 
     // Convert ingredients array to text format
     if (Array.isArray(currentRecipeData.ingredients)) {
-        document.getElementById('modifyIngredients').value = currentRecipeData.ingredients.join('\n');
+        const ingredientsText = currentRecipeData.ingredients.map(ing => {
+            if (typeof ing === 'string') return ing;
+            // Format: "200 g de farine" with space between quantity and unit
+            const quantityStr = ing.quantity % 1 === 0 ? ing.quantity : ing.quantity.toFixed(1);
+            return `${quantityStr} ${ing.unit} de ${ing.name}`;
+        }).join('\n');
+        document.getElementById('modifyIngredients').value = ingredientsText;
     } else {
         document.getElementById('modifyIngredients').value = currentRecipeData.ingredients || '';
     }
@@ -3075,19 +3082,28 @@ modifyRecipeForm.addEventListener('submit', async (e) => {
         modifyRecipeForm.style.display = 'none';
         modifyLoading.style.display = 'flex';
 
+        // Prepare complete data with nutritional info from currentRecipeData
+        const dataToSend = {
+            remark,
+            title,
+            description,
+            ingredients,
+            recipe,
+            calories: currentRecipeData?.calories || 0,
+            proteines: currentRecipeData?.proteines || 0,
+            glucides: currentRecipeData?.glucides || 0,
+            lipides: currentRecipeData?.lipides || 0
+        };
+
+        console.log('📤 Sending complete data to webhook:', dataToSend);
+
         // Call backend to modify recipe
         const response = await fetch(`${API_URL}/api/modify-recipe`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                remark,
-                title,
-                description,
-                ingredients,
-                recipe
-            })
+            body: JSON.stringify(dataToSend)
         });
 
         if (!response.ok) {
