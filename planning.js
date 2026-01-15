@@ -89,9 +89,45 @@ async function init() {
     setupEventListeners();
 }
 
+// ===== HELPER: Get Monday and Sunday from week number =====
+function getWeekDates(week, year) {
+    // Get first day of the year
+    const firstDayOfYear = new Date(year, 0, 1);
+
+    // Calculate days to Monday of week 1
+    const daysToMonday = (1 - firstDayOfYear.getDay() + 7) % 7;
+    const firstMonday = new Date(year, 0, 1 + daysToMonday);
+
+    // Calculate Monday of target week
+    const monday = new Date(firstMonday);
+    monday.setDate(firstMonday.getDate() + (week - 1) * 7);
+
+    // Calculate Sunday (6 days after Monday)
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+
+    return { monday, sunday };
+}
+
 // ===== METTRE À JOUR L'AFFICHAGE DE LA SEMAINE =====
 function updateWeekDisplay() {
-    weekDisplay.textContent = `Semaine ${currentWeek} - ${currentYear}`;
+    const { monday, sunday } = getWeekDates(currentWeek, currentYear);
+
+    const months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+                    'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+    const days = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+
+    const mondayDay = monday.getDate();
+    const sundayDay = sunday.getDate();
+    const mondayMonth = months[monday.getMonth()];
+    const sundayMonth = months[sunday.getMonth()];
+
+    // Format: "Lundi 7 au dimanche 13 mars" or "Lundi 28 février au dimanche 6 mars" (cross-month)
+    if (monday.getMonth() === sunday.getMonth()) {
+        weekDisplay.textContent = `Lundi ${mondayDay} au dimanche ${sundayDay} ${mondayMonth}`;
+    } else {
+        weekDisplay.textContent = `Lundi ${mondayDay} ${mondayMonth} au dimanche ${sundayDay} ${sundayMonth}`;
+    }
 }
 
 // ===== CHARGER LES RECETTES =====
@@ -775,10 +811,10 @@ recipePopup.addEventListener('click', (e) => {
     }
 });
 
-// ===== TOGGLE SIDEBAR =====
+// ===== TOGGLE SIDEBAR (NOW AT BOTTOM) =====
 toggleSidebar.addEventListener('click', () => {
     sidebar.classList.toggle('collapsed');
-    toggleSidebar.textContent = sidebar.classList.contains('collapsed') ? '▶' : '◀';
+    toggleSidebar.textContent = sidebar.classList.contains('collapsed') ? '▲' : '▼';
 
     // Afficher/cacher le bouton fixe
     if (sidebar.classList.contains('collapsed')) {
@@ -791,7 +827,7 @@ toggleSidebar.addEventListener('click', () => {
 // Bouton pour rouvrir la sidebar
 showSidebar.addEventListener('click', () => {
     sidebar.classList.remove('collapsed');
-    toggleSidebar.textContent = '◀';
+    toggleSidebar.textContent = '▼';
     showSidebar.classList.remove('visible');
 });
 

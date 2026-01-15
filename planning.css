@@ -11,26 +11,32 @@ body {
 }
 
 .container {
-    display: flex;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    grid-template-columns: 1fr auto;
     height: 100vh;
+    grid-template-areas:
+        "planning shopping"
+        "recipes recipes";
 }
 
-/* ===== SIDEBAR RECETTES ===== */
+/* ===== SIDEBAR RECETTES (EN BAS) ===== */
 .sidebar {
-    width: 250px;
-    min-width: 250px;
+    grid-area: recipes;
+    height: 200px;
+    min-height: 200px;
     background: #ffffff;
-    border-right: 2px solid #e9d5ff;
+    border-top: 2px solid #e9d5ff;
     display: flex;
-    flex-direction: column;
-    transition: width 0.3s, min-width 0.3s;
+    flex-direction: row;
+    transition: height 0.3s, min-height 0.3s;
     overflow: hidden;
 }
 
 .sidebar.collapsed {
-    width: 0;
-    min-width: 0;
-    border-right: none;
+    height: 0;
+    min-height: 0;
+    border-top: none;
 }
 
 .sidebar-header {
@@ -38,12 +44,16 @@ body {
     background: #c4b5fd;
     color: white;
     display: flex;
+    flex-direction: column;
     justify-content: space-between;
     align-items: center;
+    min-width: 120px;
+    writing-mode: horizontal-tb;
 }
 
 .sidebar-header h2 {
-    font-size: 18px;
+    font-size: 16px;
+    margin-bottom: 10px;
 }
 
 .header-buttons {
@@ -71,7 +81,10 @@ body {
 
 .search-container {
     padding: 10px;
-    border-bottom: 1px solid #e9d5ff;
+    border-right: 1px solid #e9d5ff;
+    display: flex;
+    align-items: center;
+    min-width: 200px;
 }
 
 .search-input {
@@ -92,18 +105,23 @@ body {
 
 .recipes-list {
     flex: 1;
-    overflow-y: auto;
+    overflow-x: auto;
+    overflow-y: hidden;
     padding: 10px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
 }
 
 .recipe-item {
     padding: 12px;
-    margin-bottom: 8px;
     background: #faf5ff;
     border-radius: 8px;
     cursor: grab;
     border: 2px solid transparent;
     transition: all 0.2s;
+    min-width: 200px;
+    flex-shrink: 0;
 }
 
 .recipe-item:hover {
@@ -134,9 +152,14 @@ body {
 
 /* ===== PLANNING ===== */
 .planning {
-    flex: 1;
+    grid-area: planning;
     padding: 20px;
     overflow-y: auto;
+    max-height: calc(100vh - 200px); /* Fixed height: total height minus sidebar */
+}
+
+.sidebar.collapsed ~ .planning {
+    max-height: 100vh; /* Full height when sidebar is collapsed */
 }
 
 .planning-header {
@@ -378,11 +401,17 @@ body {
 
 /* ===== RIGHT SIDEBAR (Bot & Shopping) ===== */
 .right-sidebar {
+    grid-area: shopping;
     width: 350px;
     background: white;
     border-left: 2px solid #e9d5ff;
     display: flex;
     flex-direction: column;
+    max-height: calc(100vh - 200px); /* Fixed height: total height minus sidebar */
+}
+
+.sidebar.collapsed ~ .right-sidebar {
+    max-height: 100vh; /* Full height when sidebar is collapsed */
 }
 
 .tabs-header {
@@ -920,27 +949,28 @@ body {
     color: #7c3aed;
 }
 
-/* ===== BOUTON POUR MONTRER LA SIDEBAR ===== */
+/* ===== BOUTON POUR MONTRER LA SIDEBAR (EN BAS) ===== */
 .show-sidebar-btn {
     position: fixed;
-    left: 10px;
-    top: 10px;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
     background: linear-gradient(135deg, #c4b5fd 0%, #a78bfa 100%);
     color: white;
     border: none;
-    padding: 10px 15px;
-    border-radius: 8px;
+    padding: 10px 20px;
+    border-radius: 8px 8px 0 0;
     cursor: pointer;
     z-index: 100;
     display: none;
     font-size: 14px;
-    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    box-shadow: 0 -4px 12px rgba(124, 58, 237, 0.3);
     transition: all 0.2s;
 }
 
 .show-sidebar-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+    transform: translateX(-50%) translateY(-2px);
+    box-shadow: 0 -6px 16px rgba(124, 58, 237, 0.4);
 }
 
 .show-sidebar-btn.visible {
