@@ -30,7 +30,7 @@ const calendar = document.getElementById('calendar');
 const sidebar = document.getElementById('sidebar');
 const toggleSidebar = document.getElementById('toggleSidebar');
 const showSidebar = document.getElementById('showSidebar');
-const refreshRecipes = document.getElementById('refreshRecipes');
+// const refreshRecipes = document.getElementById('refreshRecipes'); // v3.11: Removed
 const recipePopup = document.getElementById('recipePopup');
 const closePopup = document.getElementById('closePopup');
 const createRecipeBtn = document.getElementById('createRecipeBtn');
@@ -831,16 +831,14 @@ showSidebar.addEventListener('click', () => {
     showSidebar.classList.remove('visible');
 });
 
-// ===== REFRESH RECIPES =====
-refreshRecipes.addEventListener('click', async () => {
-    refreshRecipes.style.opacity = '0.5';
-    refreshRecipes.disabled = true;
-
-    await loadRecipes();
-
-    refreshRecipes.style.opacity = '1';
-    refreshRecipes.disabled = false;
-});
+// ===== REFRESH RECIPES ===== (v3.11: Removed, button no longer in UI)
+// refreshRecipes.addEventListener('click', async () => {
+//     refreshRecipes.style.opacity = '0.5';
+//     refreshRecipes.disabled = true;
+//     await loadRecipes();
+//     refreshRecipes.style.opacity = '1';
+//     refreshRecipes.disabled = false;
+// });
 
 // ===== NAVIGATION DE SEMAINE =====
 prevWeek.addEventListener('click', async () => {
