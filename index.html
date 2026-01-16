@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planning de Repas</title>
+    <meta name="deploy-timestamp" content="2026-01-15-14-30">
+    <link rel="stylesheet" href="planning.css">
+</head>
+<body>
+    <!-- Bouton pour rouvrir la sidebar quand elle est cachée -->
+    <button class="show-sidebar-btn" id="showSidebar">▲ Recettes</button>
+
+    <div class="container">
+        <!-- Sidebar Recettes -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-left">
+                <div class="sidebar-header">
+                    <h2>Recettes</h2>
+                    <div class="header-buttons">
+                        <button class="toggle-btn" id="toggleSidebar">▼</button>
+                    </div>
+                </div>
+                <div class="search-container">
+                    <input
+                        type="text"
+                        class="search-input"
+                        id="searchRecipes"
+                        placeholder="Rechercher..."
+                    />
+                </div>
+            </div>
+            <div class="recipes-list" id="recipesList">
+                <div class="loading">Chargement...</div>
+            </div>
+        </aside>
+
+        <!-- Planning -->
+        <main class="planning">
+            <div class="planning-header">
+                <h1>Planning de la Semaine</h1>
+                <div class="header-controls">
+                    <div class="week-navigation">
+                        <button class="week-nav-btn" id="prevWeek">← Précédent</button>
+                        <span class="week-display" id="weekDisplay">Semaine 46 - 2025</span>
+                        <button class="week-nav-btn" id="nextWeek">Suivant →</button>
+                    </div>
+                    <div class="servings-control">
+                        <label for="servingsInput">👤 Personnes :</label>
+                        <button class="servings-btn" id="decreaseServings">−</button>
+                        <input type="number" id="servingsInput" min="1" max="20" value="2" />
+                        <button class="servings-btn" id="increaseServings">+</button>
+                    </div>
+                </div>
+            </div>
+            <div class="calendar-grid" id="calendar">
+                <!-- Généré dynamiquement -->
+            </div>
+        </main>
+
+        <!-- Sidebar droite : Liste de courses -->
+        <aside class="right-sidebar">
+            <div class="shopping-container">
+                <div class="shopping-header">
+                    <button class="create-recipe-btn" id="createRecipeBtn">➕ Créer recette</button>
+                </div>
+                <h2 class="shopping-title">Liste de courses</h2>
+                <div class="shopping-content" id="shoppingContent">
+                    <p class="empty-shopping">Aucun ingrédient dans la liste</p>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Popup pour l'historique des listes de courses (gauche) -->
+    <div class="history-popup" id="historyPopup">
+        <div class="history-popup-content">
+            <button class="close-popup" id="closeHistoryPopup">×</button>
+            <h2 id="historyPopupTitle">Liste de courses</h2>
+            <div id="historyPopupBody"></div>
+        </div>
+    </div>
+
+    <!-- Popup pour les détails de recette -->
+    <div class="recipe-popup" id="recipePopup">
+        <div class="popup-content">
+            <button class="close-popup" id="closePopup">×</button>
+            <h2 id="popupTitle"></h2>
+            <div id="popupBody"></div>
+        </div>
+    </div>
+
+    <!-- Popup Paramètres Liste de Courses -->
+    <div class="shopping-settings-popup" id="shoppingSettingsPopup">
+        <div class="settings-popup-content">
+            <button class="close-popup" id="closeSettingsPopup">×</button>
+            <h2>Paramètres de la liste de courses</h2>
+
+            <div class="settings-layout">
+                <!-- Colonne gauche : Planning -->
+                <div class="settings-planning">
+                    <div class="settings-planning-header">
+                        <h3>Planning de la semaine</h3>
+                        <div class="settings-week-nav">
+                            <button class="settings-week-btn" id="settingsPrevWeek">←</button>
+                            <span class="settings-week-display" id="settingsWeekDisplay">Semaine 46 - 2025</span>
+                            <button class="settings-week-btn" id="settingsNextWeek">→</button>
+                        </div>
+                    </div>
+                    <p class="settings-help">Cliquez sur un repas pour l'inclure ou l'exclure. <strong>Vert</strong> = semaine courante incluse, <strong>Rouge</strong> = exclue, <strong>Jaune</strong> = autre semaine (bordure verte = incluse).</p>
+                    <div class="settings-actions">
+                        <button class="settings-select-btn" id="settingsSelectAll">Tout inclure</button>
+                        <button class="settings-select-btn" id="settingsSelectNone">Tout exclure</button>
+                    </div>
+                    <div class="settings-calendar" id="settingsCalendar">
+                        <!-- Généré dynamiquement -->
+                    </div>
+                </div>
+
+                <!-- Colonne droite : Liste éditable -->
+                <div class="settings-shopping-list">
+                    <h3>Liste de courses</h3>
+                    <div class="settings-list-content" id="settingsListContent">
+                        <p class="empty-shopping">Générez d'abord la liste pour l'éditer.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-footer">
+                <button class="settings-reset-btn" id="resetSettings">🔄 Réinitialiser</button>
+                <button class="settings-apply-btn" id="applySettings">Appliquer et fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup Création de recette -->
+    <div class="create-recipe-popup" id="createRecipePopup">
+        <div class="create-recipe-popup-content">
+            <button class="close-popup" id="closeCreateRecipePopup">×</button>
+            <h2>Créer une nouvelle recette</h2>
+            <form id="createRecipeForm" class="create-recipe-form">
+                <div class="form-group">
+                    <label for="recipeTitle">Titre</label>
+                    <input type="text" id="recipeTitle" name="title" required placeholder="Nom de la recette">
+                </div>
+
+                <div class="form-group">
+                    <label for="recipeDescription">Description</label>
+                    <textarea id="recipeDescription" name="description" rows="3" placeholder="Courte description de la recette"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="recipeIngredients">Ingrédients</label>
+                    <textarea id="recipeIngredients" name="ingredients" rows="8" required placeholder="Liste des ingrédients (texte libre)"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="recipeSteps">Recette</label>
+                    <textarea id="recipeSteps" name="recipe" rows="8" required placeholder="Étapes de préparation"></textarea>
+                </div>
+
+                <button type="submit" class="create-recipe-submit-btn">Créer</button>
+            </form>
+
+            <!-- Section de chargement -->
+            <div id="recipeLoading" class="recipe-loading" style="display: none;">
+                <div class="loading-spinner"></div>
+                <p>Création de la recette en cours...</p>
+                <p class="loading-subtext">n8n traite votre demande, veuillez patienter.</p>
+            </div>
+
+            <!-- Section de prévisualisation (cachée par défaut) -->
+            <div id="recipePreview" class="recipe-preview" style="display: none;">
+                <h3>Aperçu de la recette</h3>
+                <div id="recipePreviewContent"></div>
+                <div class="recipe-preview-actions">
+                    <button class="recipe-modify-btn" id="recipeModifyBtn">Modifier</button>
+                    <button class="recipe-accept-btn" id="recipeAcceptBtn">Accepter</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup Modification de recette -->
+    <div class="modify-recipe-popup" id="modifyRecipePopup">
+        <div class="modify-recipe-popup-content">
+            <button class="close-popup" id="closeModifyRecipePopup">×</button>
+            <h2>Modifier la recette</h2>
+            <form id="modifyRecipeForm" class="modify-recipe-form">
+                <div class="form-group">
+                    <label for="modifyRemark">Remarque</label>
+                    <textarea id="modifyRemark" name="remark" rows="3" placeholder="Ajoutez vos remarques ou modifications souhaitées..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="modifyTitle">Titre</label>
+                    <input type="text" id="modifyTitle" name="title" required placeholder="Nom de la recette">
+                </div>
+
+                <div class="form-group">
+                    <label for="modifyDescription">Description</label>
+                    <textarea id="modifyDescription" name="description" rows="3" placeholder="Courte description de la recette"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="modifyIngredients">Ingrédients</label>
+                    <textarea id="modifyIngredients" name="ingredients" rows="8" required placeholder="Liste des ingrédients"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="modifySteps">Recette</label>
+                    <textarea id="modifySteps" name="recipe" rows="8" required placeholder="Étapes de préparation"></textarea>
+                </div>
+
+                <button type="submit" class="modify-recipe-submit-btn">Modifier recette</button>
+            </form>
+
+            <!-- Section de chargement -->
+            <div id="modifyLoading" class="recipe-loading" style="display: none;">
+                <div class="loading-spinner"></div>
+                <p>Modification de la recette en cours...</p>
+                <p class="loading-subtext">n8n traite votre demande, veuillez patienter.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification popup -->
+    <div class="notification-popup" id="notificationPopup">
+        <div class="notification-content">
+            <span class="notification-icon">✓</span>
+            <span class="notification-message" id="notificationMessage">Recette enregistrée !</span>
+        </div>
+    </div>
+
+    <!-- Version -->
+    <div class="version-info">Version_1</div>
+
+    <script src="config.js"></script>
+    <script src="planning.js"></script>
+</body>
+</html>
